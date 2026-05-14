@@ -665,7 +665,7 @@
         // Cargar datos
         async function cargarDatos() {
             try {
-                const response = await fetch('hotel_bookings_enriched.csv');
+                const response = await fetch('./data/hotel_bookings_enriched.csv');
                 const csvText = await response.text();
                 const rawData = parseCSV(csvText);
                 const data = procesarDatos(rawData);
