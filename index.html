@@ -1,1314 +1,1352 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análisis de Cancelaciones Hoteleras | Portugal 2015-2017</title>
-    
-    <!-- CSS Framework -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Librerías de Visualización -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container-main {
-            max-width: 1600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-            margin: 0;
-        }
-        
-        .nav-tabs {
-            border-bottom: 2px solid #667eea;
-            padding: 0 20px;
-        }
-        
-        .nav-link {
-            color: #667eea;
-            font-weight: 600;
-            border: none;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-link:hover {
-            color: #764ba2;
-            border-bottom-color: #764ba2;
-        }
-        
-        .nav-link.active {
-            color: white;
-            background: #667eea;
-            border: none;
-        }
-        
-        .section {
-            padding: 40px;
-            display: none;
-        }
-        
-        .section.active {
-            display: block;
-        }
-        
-        .section-title {
-            font-size: 2em;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 15px;
-        }
-        
-        .chart-container {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            min-height: 500px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .metrics-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .metric-card h3 {
-            font-size: 1.2em;
-            margin-bottom: 10px;
-            opacity: 0.9;
-        }
-        
-        .metric-card .value {
-            font-size: 2.5em;
-            font-weight: 700;
-        }
-        
-        .finding-box {
-            background: #e8f4f8;
-            border-left: 4px solid #0066cc;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        
-        .finding-box strong {
-            color: #0066cc;
-        }
-        
-        .warning-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        
-        .warning-box strong {
-            color: #cc7700;
-        }
-        
-        .conclusion-box {
-            background: #d4edda;
-            border-left: 4px solid #28a745;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 4px;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .conclusion-box h4 {
-            color: #155724;
-            margin-bottom: 10px;
-        }
-        
-        .conclusion-box textarea {
-            width: 100%;
-            min-height: 120px;
-            padding: 10px;
-            font-family: 'Courier New', monospace;
-            border: 1px solid #c3e6cb;
-            border-radius: 4px;
-            resize: vertical;
-        }
-        
-        .description {
-            background: #f0f2f6;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 0.95em;
-            line-height: 1.6;
-        }
-        
-        .footer {
-            background: #333;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            font-size: 0.9em;
-        }
-        
-        svg {
-            max-width: 100%;
-            height: auto;
-        }
-        
-        .tooltip {
-            position: absolute;
-            padding: 8px 12px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            border-radius: 4px;
-            pointer-events: none;
-            font-size: 0.9em;
-            z-index: 1000;
-        }
-        
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        @media (max-width: 1200px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>La Moneda Frágil — Cómo la volatilidad cambiaria erosiona las reservas hoteleras fuera de la Eurozona</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,800;1,9..144,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+
+<style>
+  :root {
+    --bg: #f4ede2;
+    --bg-deep: #2b2620;
+    --ink: #1a1612;
+    --ink-soft: #4a3f33;
+    --paper: #faf6ee;
+    --rule: #c9bba6;
+    --rule-soft: #e0d4bd;
+
+    --pain: #b03a2e;
+    --pain-soft: #d97757;
+    --pain-deep: #6e1f15;
+    --gain: #1e6650;
+    --gain-soft: #4a9b7e;
+    --neutral: #8a7a64;
+    --gold: #b88a3f;
+
+    --shadow: 0 1px 0 rgba(26,22,18,.06), 0 12px 30px rgba(26,22,18,.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-weight: 400;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ====== HERO ====== */
+  .hero {
+    min-height: 100vh;
+    padding: 7vh 8vw 4vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background:
+      radial-gradient(ellipse at 80% 10%, rgba(176,58,46,0.10), transparent 55%),
+      radial-gradient(ellipse at 10% 90%, rgba(30,102,80,0.08), transparent 60%),
+      var(--bg);
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: radial-gradient(rgba(26,22,18,0.05) 1px, transparent 1px);
+    background-size: 4px 4px;
+    opacity:.5;
+    pointer-events:none;
+  }
+  .hero-top {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    position: relative;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .hero-top .dossier { display:flex; gap:18px; align-items:center; }
+  .hero-top .dot { width:7px; height:7px; background:var(--pain); border-radius:50%; display:inline-block; animation: pulse 2.4s ease-in-out infinite;}
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+  .hero-content { position: relative; max-width: 1100px; }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(46px, 8vw, 120px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 4vh 0 2vh;
+    color: var(--ink);
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--pain-deep);
+  }
+  .hero .lede {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(17px, 1.4vw, 22px);
+    line-height: 1.55;
+    max-width: 680px;
+    color: var(--ink-soft);
+    font-weight: 400;
+  }
+  .hero-bottom {
+    display:flex; justify-content:space-between; align-items:flex-end;
+    position: relative;
+    margin-top: 5vh;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .byline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .byline strong { color: var(--ink); font-weight:500; }
+  .scroll-cue {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display:flex; align-items:center; gap:10px;
+    animation: bob 2.4s ease-in-out infinite;
+  }
+  .scroll-cue .arrow { width: 36px; height: 1px; background: var(--ink-soft); position:relative; }
+  .scroll-cue .arrow::after {
+    content:""; position:absolute; right:0; top:-3px;
+    width: 7px; height: 7px;
+    border-right:1px solid var(--ink-soft); border-bottom:1px solid var(--ink-soft);
+    transform: rotate(-45deg);
+  }
+  @keyframes bob { 0%,100% { transform: translateY(0);} 50% { transform: translateY(4px);} }
+
+  .hero-stats {
+    display: flex; gap: 60px; margin-top: 3vh;
+    flex-wrap: wrap;
+  }
+  .hero-stats .s { display: flex; flex-direction: column; gap: 4px; }
+  .hero-stats .s .n {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(28px, 3vw, 42px);
+    font-weight: 400;
+    color: var(--pain-deep);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .hero-stats .s .l {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* ====== SCROLLY ====== */
+  .scrolly {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(360px, 38%) 1fr;
+    gap: 0;
+    background: var(--paper);
+  }
+  .narrative {
+    padding: 0 5vw;
+    border-right: 1px solid var(--rule-soft);
+  }
+  .step {
+    min-height: 95vh;
+    padding: 18vh 0 12vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-bottom: 1px dashed var(--rule-soft);
+    opacity: 0.30;
+    transition: opacity 0.6s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.is-active { opacity: 1; }
+
+  .chapter-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--pain-deep);
+    margin-bottom: 14px;
+    display: flex; align-items:center; gap: 14px;
+  }
+  .chapter-tag .num {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 3px 9px;
+    border-radius: 2px;
+    font-size: 10px;
+  }
+  .step h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(28px, 2.6vw, 40px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 22px;
+  }
+  .step h2 em { color: var(--pain-deep); font-style: italic; }
+  .step p {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+    max-width: 480px;
+  }
+  .step p strong { color: var(--ink); font-weight: 600; }
+  .step .insight {
+    margin-top: 22px;
+    padding: 18px 20px;
+    background: var(--bg);
+    border-left: 3px solid var(--pain);
+    font-family: 'Fraunces', serif;
+    font-size: 15.5px;
+    font-style: italic;
+    color: var(--ink);
+    line-height: 1.55;
+    box-shadow: var(--shadow);
+  }
+  .step .insight strong {
+    font-style: normal;
+    font-weight: 600;
+    color: var(--pain-deep);
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .data-pill {
+    display: inline-block;
+    background: var(--ink); color: var(--paper);
+    padding: 2px 8px; border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    margin: 0 2px;
+  }
+
+  /* ====== STICKY GRAPHIC ====== */
+  .graphic-wrap {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .graphic-inner {
+    width: 92%;
+    height: 88%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .graphic-header {
+    display:flex; justify-content:space-between; align-items:flex-end;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    gap: 20px;
+  }
+  .graphic-title {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .graphic-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+  .chart {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    min-height: 0;
+  }
+  .chart svg { width: 100%; height: 100%; display: block; }
+  .scene { opacity: 0; transition: opacity 0.7s ease; position: absolute; inset: 0; pointer-events:none;}
+  .scene.is-active { opacity: 1; pointer-events:auto; }
+
+  .axis path, .axis line { stroke: var(--rule); shape-rendering: crispEdges; }
+  .axis text { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+  .axis-label { font-family:'Inter', sans-serif; font-size: 11px; fill: var(--ink); font-weight:500; }
+
+  /* ====== OUTRO ====== */
+  .outro {
+    padding: 14vh 8vw 12vh;
+    background: var(--bg-deep);
+    color: var(--paper);
+    position: relative;
+  }
+  .outro::before {
+    content:"";
+    position:absolute; inset:0;
+    background-image: radial-gradient(rgba(250,246,238,0.04) 1px, transparent 1px);
+    background-size: 4px 4px;
+    pointer-events:none;
+  }
+  .outro-inner { max-width: 1100px; margin: 0 auto; position: relative; }
+  .outro .chapter-tag { color: var(--pain-soft); }
+  .outro .chapter-tag .num { background: var(--paper); color: var(--ink); }
+  .outro h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(36px, 5vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 18px 0 30px;
+    max-width: 18ch;
+  }
+  .outro h2 em { color: var(--pain-soft); font-style: italic; }
+  .takeaways {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 30px;
+    margin-top: 50px;
+  }
+  .takeaway {
+    border-top: 1px solid rgba(250,246,238,0.2);
+    padding-top: 18px;
+  }
+  .takeaway .ti {
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--pain-soft);
+    margin-bottom: 12px;
+  }
+  .takeaway h3 {
+    font-family:'Fraunces', serif;
+    font-weight: 500;
+    font-size: 21px;
+    margin: 0 0 10px;
+    color: var(--paper);
+    letter-spacing: -0.01em;
+  }
+  .takeaway p { font-size: 14px; line-height: 1.6; color: rgba(250,246,238,0.7); margin: 0; }
+
+  .colophon {
+    margin-top: 80px;
+    padding-top: 30px;
+    border-top: 1px solid rgba(250,246,238,0.15);
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(250,246,238,0.5);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px;
+  }
+
+  /* tooltip */
+  .tt {
+    position: fixed;
+    pointer-events:none;
+    background: var(--ink);
+    color: var(--paper);
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 8px 11px;
+    border-radius: 3px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+    line-height: 1.55;
+    max-width: 240px;
+  }
+  .tt strong { color: var(--pain-soft); font-weight:500;}
+  .tt em { color: var(--gain-soft); font-style:normal;}
+
+  .rail {
+    position: fixed; top: 0; left: 0;
+    height: 2px; background: var(--pain);
+    width: 0%;
+    z-index: 200;
+    transition: width 0.1s;
+  }
+
+  @media (max-width: 900px) {
+    .scrolly { grid-template-columns: 1fr; }
+    .narrative { border-right: none; padding: 0 7vw; }
+    .graphic-wrap { height: 75vh; top: 12vh; }
+    .step { min-height: auto; padding: 10vh 0 10vh; }
+  }
+</style>
 </head>
 <body>
-    <div class="container-main">
-        <!-- HEADER -->
-        <div class="header">
-            <h1>📊 Análisis de Cancelaciones Hoteleras</h1>
-            <p>Portugal 2015-2017 | 110,579 Reservas | Tasas de Cambio ECB</p>
-        </div>
-        
-        <!-- NAVIGATION TABS -->
-        <ul class="nav nav-tabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" data-tab="1">1. Dependencia Eurozona</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-tab="2">2. Volatilidad Monedas</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-tab="3">3. Variación vs Cancelación</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-tab="4">4. Umbrales Críticos</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-tab="5">5. Reacción Mercados</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-tab="6">6. Anticipación y Riesgo</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-tab="7">7. Tipo de Hotel</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-tab="8">8. Factores Amplificadores</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-tab="9">9. Early Warning</a>
-            </li>
-        </ul>
-        
-        <!-- CONTENIDO DE SECCIONES -->
-        
-        <!-- SECCIÓN 1: DEPENDENCIA EUROZONA (SANKEY) -->
-        <div class="section active" id="section-1">
-            <h2 class="section-title">1️⃣ Dependencia del Turismo Fuera de la Eurozona</h2>
-            
-            <div class="description">
-                <strong>Objetivo:</strong> Visualizar el flujo de viajeros desde su origen (país/moneda) 
-                hacia Portugal, categorizando por Eurozona vs. Fuera. ¿Qué tan dependientes son los 
-                hoteles de turistas que enfrentan riesgo cambiario?
-            </div>
-            
-            <div class="metrics-row">
-                <div class="metric-card">
-                    <h3>Reservas Euro</h3>
-                    <div class="value" id="metric-euro">—</div>
-                    <small>Basado en datos reales</small>
-                </div>
-                <div class="metric-card">
-                    <h3>Reservas No-Euro</h3>
-                    <div class="value" id="metric-no-euro">—</div>
-                    <small>Basado en datos reales</small>
-                </div>
-                <div class="metric-card">
-                    <h3>Cancelación Euro</h3>
-                    <div class="value" id="metric-cancel-euro">—</div>
-                    <small>% de cancelación</small>
-                </div>
-                <div class="metric-card">
-                    <h3>Cancelación No-Euro</h3>
-                    <div class="value" id="metric-cancel-no-euro">—</div>
-                    <small>% de cancelación</small>
-                </div>
-            </div>
-            
-            <div class="chart-container">
-                <div class="flourish-embed flourish-sankey" data-src="visualisation/28967034">
-                    <script src="https://public.flourish.studio/resources/embed.js"></script><noscript>
-                        <img src="https://public.flourish.studio/visualisation/28967034/thumbnail" width="100%" alt="sankey visualization" /></noscript></div>
-            </div>
-            
-            <div class="finding-box">
-                <strong>📌 Interpretación del Sankey:</strong>
-                <ul>
-                    <li>Los flujos representan viajeros desde países de origen</li>
-                    <li>Anchos = volumen de reservas</li>
-                    <li>Colores = Eurozona (azul) vs No-Euro (naranja)</li>
-                    <li>Destino = Completó (verde) o Canceló (rojo)</li>
-                </ul>
-            </div>
-            
-            <div class="conclusion-box">
-                <h4>🎯 Tu Conclusión:</h4>
-                <textarea placeholder="¿Cuál es el nivel de dependencia real de turismo no-euro? ¿Qué países son críticos? ¿Representa riesgo significativo?"></textarea>
-            </div>
-        </div>
-                
-        <!-- SECCIÓN 2: VOLATILIDAD DE MONEDAS (RIDGELINE) -->
-        <div class="section" id="section-2">
-            <h2 class="section-title">2️⃣ Volatilidad de las Monedas</h2>
-            
-            <div class="description">
-                <strong>Objetivo:</strong> Visualizar la distribución de variación cambiaria para 
-                cada moneda a lo largo del tiempo. Las "montañas" anchas revelan monedas inestables.
-            </div>
-            
-            <div class="chart-container">
-                <canvas id="ridgeline-chart"></canvas>
-            </div>
-            
-            <div class="warning-box">
-                <strong>⚠️ Nota sobre Ridgeline:</strong> El gráfico muestra la densidad de 
-                variaciones para los principales países no-euro. Monedas más volátiles aparecen 
-                con distribuciones más anchas o bimodales.
-            </div>
-            
-            <div class="conclusion-box">
-                <h4>🎯 Tu Conclusión (Rellena después de analizar):</h4>
-                <textarea placeholder="¿Qué monedas fueron más volátiles? ¿Hay momentos específicos de crisis? ¿Cómo impactó en reservas?"></textarea>
-            </div>
-        </div>
-        
-        <!-- SECCIÓN 3: SCATTER CON DENSIDAD MARGINAL -->
-        <div class="section" id="section-3">
-            <h2 class="section-title">3️⃣ Asociación: Variación Cambiaria vs Cancelaciones</h2>
-            
-            <div class="description">
-                <strong>Objetivo:</strong> Mostrar correlación individual entre exchange_variation 
-                e is_canceled. Los gráficos de densidad en los márgenes revelan concentraciones 
-                sin solapamiento visual.
-            </div>
-            
-            <div class="metrics-row">
-                <div class="metric-card">
-                    <h3>Correlación Pearson</h3>
-                    <div class="value" id="metric-correlation">—</div>
-                    <small>R-squared (%)</small>
-                </div>
-                <div class="metric-card">
-                    <h3>Muestra (No-Euro)</h3>
-                    <div class="value" id="metric-sample">—</div>
-                    <small>registros analizados</small>
-                </div>
-            </div>
-            
-            <div class="chart-container">
-                <div id="scatter-chart"></div>
-            </div>
-            
-            <div class="finding-box">
-                <strong>📌 Interpretación:</strong>
-                <ul>
-                    <li>Puntos azules = no canceló</li>
-                    <li>Puntos rojos = canceló</li>
-                    <li>Distribuciones marginales muestran concentración</li>
-                    <li>Línea azul = tendencia lineal</li>
-                </ul>
-            </div>
-            
-            <div class="conclusion-box">
-                <h4>🎯 Tu Conclusión (Rellena después de analizar):</h4>
-                <textarea placeholder="¿Es la correlación significativa? ¿Hay clusters específicos? ¿Sugiere causalidad o confusión?"></textarea>
-            </div>
-        </div>
-        
-        <!-- SECCIÓN 4: HEATMAP DE PROBABILIDAD / SPLINE -->
-        <div class="section" id="section-4">
-            <h2 class="section-title">4️⃣ Umbrales Críticos de Cancelación</h2>
-            
-            <div class="description">
-                <strong>Objetivo:</strong> Identificar puntos de inflexión donde la cancelación 
-                se vuelve exponencial. Un spline suavizado revela el comportamiento no-lineal.
-            </div>
-            
-            <div class="chart-container">
-                <canvas id="threshold-chart"></canvas>
-            </div>
-            
-            <div class="warning-box">
-                <strong>⚠️ Análisis:</strong> La curva azul (raw) muestra datos reales binned. 
-                La curva roja (spline) suaviza para revelar la tendencia subyacente.
-            </div>
-            
-            <div class="conclusion-box">
-                <h4>🎯 Tu Conclusión (Rellena después de analizar):</h4>
-                <textarea placeholder="¿A qué variación cambiaria se produce cambio en comportamiento? ¿Hay umbral claro (ej: 5%, 10%)? ¿Es lineal o exponencial?"></textarea>
-            </div>
-        </div>
-        
-        <!-- SECCIÓN 5: SMALL MULTIPLES -->
-        <div class="section" id="section-5">
-            <h2 class="section-title">5️⃣ Reacción por Mercados Emisores</h2>
-            
-            <div class="description">
-                <strong>Objetivo:</strong> Comparar cómo cada país/mercado reaccionó ante 
-                cambios en su moneda. ¿Todos responden igual o hay heterogeneidad?
-            </div>
-            
-            <div class="chart-container">
-                <div id="small-multiples-chart"></div>
-            </div>
-            
-            <div class="finding-box">
-                <strong>📌 Interpretación:</strong>
-                <ul>
-                    <li>Cada panel = un país principal</li>
-                    <li>Eje X = variación cambiaria (%)</li>
-                    <li>Eje Y = tasa de cancelación (%)</li>
-                    <li>Línea = tendencia del país</li>
-                    <li>Compara pendientes: ¿quién es más sensible?</li>
-                </ul>
-            </div>
-            
-            <div class="conclusion-box">
-                <h4>🎯 Tu Conclusión (Rellena después de analizar):</h4>
-                <textarea placeholder="¿Todos los países responden igual? ¿Hay mercados más resilientes? ¿UK es diferente tras Brexit? ¿Qué país es más sensible?"></textarea>
-            </div>
-        </div>
-        
-        <!-- SECCIÓN 6: BUBBLE PLOT -->
-        <div class="section" id="section-6">
-            <h2 class="section-title">6️⃣ Anticipación de Reserva y Riesgo Cambiario</h2>
-            
-            <div class="description">
-                <strong>Objetivo:</strong> Eje X: lead_time (días antes), Eje Y: exchange_variation (%), 
-                Tamaño: % cancelaciones. ¿Se concentran cancelaciones en cuadrante de alta anticipación 
-                + alta volatilidad?
-            </div>
-            
-            <div class="chart-container">
-                <div id="bubble-chart"></div>
-            </div>
-            
-            <div class="finding-box">
-                <strong>📌 Interpretación:</strong>
-                <ul>
-                    <li>Burbujas grandes = más cancelaciones</li>
-                    <li>Arriba-derecha = alto riesgo (anticipación + volatilidad)</li>
-                    <li>Abajo-izquierda = bajo riesgo (último minuto + estable)</li>
-                    <li>Color = intensidad de cancelación</li>
-                </ul>
-            </div>
-            
-            <div class="conclusion-box">
-                <h4>🎯 Tu Conclusión (Rellena después de analizar):</h4>
-                <textarea placeholder="¿Se concentran las cancelaciones en arriba-derecha? ¿Es sinergia entre lead_time y variación? ¿Cuál factor importa más?"></textarea>
-            </div>
-        </div>
-        
-        <!-- SECCIÓN 7: SPLIT VIOLIN PLOT -->
-        <div class="section" id="section-7">
-            <h2 class="section-title">7️⃣ Impacto según Tipo de Hotel</h2>
-            
-            <div class="description">
-                <strong>Objetivo:</strong> Compara distribuciones de variación cambiaria para 
-                reservas canceladas vs. no canceladas, dividiendo por tipo de hotel. 
-                ¿Un modelo es más resiliente?
-            </div>
-            
-            <div class="chart-container">
-                <canvas id="violin-chart"></canvas>
-            </div>
-            
-            <div class="finding-box">
-                <strong>📌 Interpretación:</strong>
-                <ul>
-                    <li>Lado izquierdo (gris) = no canceló</li>
-                    <li>Lado derecho (rojo) = canceló</li>
-                    <li>Violín más ancho = más dispersión</li>
-                    <li>Mediana visible = centro de la distribución</li>
-                </ul>
-            </div>
-            
-            <div class="conclusion-box">
-                <h4>🎯 Tu Conclusión (Rellena después de analizar):</h4>
-                <textarea placeholder="¿City Hotels más vulnerables que Resort? ¿Distribuciones diferentes? ¿Variación más extrema en cancelaciones?"></textarea>
-            </div>
-        </div>
-        
-        <!-- SECCIÓN 8: PARALLEL COORDINATES -->
-        <div class="section" id="section-8">
-            <h2 class="section-title">8️⃣ Factores que Amplifican la Sensibilidad</h2>
-            
-            <div class="description">
-                <strong>Objetivo:</strong> Ver cómo interactúan customer_type, distribution_channel, 
-                deposit_type con variación cambiaria. Resaltar líneas que terminan en "cancelado" 
-                para encontrar patrones complejos.
-            </div>
-            
-            <div class="chart-container">
-                <svg id="parallel-chart" width="100%" height="500"></svg>
-            </div>
-            
-            <div class="warning-box">
-                <strong>⚠️ Interactividad:</strong> Pasa el mouse sobre líneas para ver detalles. 
-                Las líneas rojo brillante = canceladas.
-            </div>
-            
-            <div class="conclusion-box">
-                <h4>🎯 Tu Conclusión (Rellena después de analizar):</h4>
-                <textarea placeholder="¿Qué combinación de factores predice mejor cancelación? ¿Hay patrón (ej: Online TA + sin depósito + variación >2%)? ¿Es predictivo?"></textarea>
-            </div>
-        </div>
-        
-        <!-- SECCIÓN 9: HORIZON CHART -->
-        <div class="section" id="section-9">
-            <h2 class="section-title">9️⃣ Señal Temprana de Riesgo (Early Warning)</h2>
-            
-            <div class="description">
-                <strong>Objetivo:</strong> Visualizar series temporales densas (cancelación + variación) 
-                para detectar micro-variaciones que preceden oleadas de cancelaciones masivas. 
-                Funciona como "tablero de control" de riesgo.
-            </div>
-            
-            <div class="chart-container">
-                <canvas id="horizon-chart"></canvas>
-            </div>
-            
-            <div class="warning-box">
-                <strong>⚠️ Interpretación:</strong> Áreas rojas = alto riesgo. 
-                Picos = momentos críticos. ¿Preceden cambios en cancelación?
-            </div>
-            
-            <div class="conclusion-box">
-                <h4>🎯 Tu Conclusión (Rellena después de analizar):</h4>
-                <textarea placeholder="¿Hay early warning signals? ¿Picos de variación preceden oleadas de cancelación? ¿Tiempo de retraso? ¿Es accionable?"></textarea>
-            </div>
-        </div>
-        
-        <!-- FOOTER -->
-        <div class="footer">
-            <p>Dataset: Hotel Bookings Portugal 2015-2017 | Enriquecido con ECB Exchange Rates</p>
-            <p>Análisis Exploratorio | Visualizaciones con D3.js, Plotly.js, Chart.js</p>
-        </div>
+
+<div class="rail" id="rail"></div>
+<div class="tt" id="tt"></div>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-top">
+    <div class="dossier">
+      <span class="dot"></span>
+      <span>StoryTelling · Hotel Bookings Enriched</span>
     </div>
-    
-    <!-- SCRIPTS -->
-    <script>
-        // =====================================================================
-        // CARGAR DATOS REALES DEL CSV
-        // =====================================================================
+    <div>Antonio, Almeida &amp; Nunes (2019) · enriquecido con tasas FX</div>
+  </div>
 
-        let DATOS_GLOBALES = {};
+  <div class="hero-content">
+    <div class="byline" style="margin-bottom:30px;">— UOC · Visualización de datos · Glauco Durango</div>
+    <h1>La <em>moneda</em><br/>fr&aacute;gil.</h1>
+    <p class="lede">
+      Entre el d&iacute;a en que un viajero reserva su hotel y el d&iacute;a en que llega, la divisa de su pa&iacute;s puede haberse devaluado, apreciado o moverse de forma err&aacute;tica.
+      Esta es la historia, contada con <strong style="color:var(--pain-deep)">24,659 reservas reales</strong> de hoteles portugueses, de c&oacute;mo la volatilidad cambiaria silenciosamente convierte
+      las reservas de los pa&iacute;ses <strong style="color:var(--pain-deep)">fuera de la Eurozona</strong> en cancelaciones.
+    </p>
 
-        function parseCSV(csvText) {
-            const lines = csvText.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-            const data = [];
-            
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                
-                const values = [];
-                let current = '';
-                let inQuotes = false;
-                
-                for (let j = 0; j < lines[i].length; j++) {
-                    const char = lines[i][j];
-                    if (char === '"') {
-                        inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
-                        values.push(current.trim().replace(/"/g, ''));
-                        current = '';
-                    } else {
-                        current += char;
-                    }
-                }
-                values.push(current.trim().replace(/"/g, ''));
-                
-                const row = {};
-                headers.forEach((header, idx) => {
-                    row[header] = values[idx];
-                });
-                data.push(row);
-            }
-            
-            return data;
-        }
+    <div class="hero-stats">
+      <div class="s"><div class="n" id="hs-n">24,659</div><div class="l">Reservas Non-Euro</div></div>
+      <div class="s"><div class="n" id="hs-cr">24.7%</div><div class="l">Tasa de cancelaci&oacute;n</div></div>
+      <div class="s"><div class="n" id="hs-gap">$2.95M</div><div class="l">Ingreso no percibido</div></div>
+      <div class="s"><div class="n" id="hs-c">11</div><div class="l">Pa&iacute;ses</div></div>
+    </div>
+  </div>
 
-        function procesarDatos(data) {
-            // Convertir strings a números
-            data.forEach(row => {
-                row.is_canceled = parseInt(row.is_canceled) || 0;
-                row.lead_time = parseInt(row.lead_time) || 0;
-                row.adr = parseFloat(row.adr) || 0;
-                row.exchange_variation = parseFloat(row.exchange_variation) || 0;
-                row.adults = parseInt(row.adults) || 0;
-                row.children = parseInt(row.children) || 0;
-                row.babies = parseInt(row.babies) || 0;
-            });
-            
-            return data;
-        }
+  <div class="hero-bottom">
+    <div class="byline">
+      Filtro aplicado · <strong>euro_zone == 'Non-Euro'</strong><br/>
+      Variable n&uacute;cleo · <strong>exchange_variation = (rate_booking - rate_arrival) / rate_arrival</strong>
+    </div>
+    <div class="scroll-cue">
+      Desplazar para leer
+      <span class="arrow"></span>
+    </div>
+  </div>
+</section>
 
-        function calcularMetricas(data) {
-            const total = data.length;
-            const euro = data.filter(d => d.euro_zone === 'Euro').length;
-            const noEuro = data.filter(d => d.euro_zone === 'Non-Euro').length;
-            
-            const euroCancel = data.filter(d => d.euro_zone === 'Euro' && d.is_canceled === 1).length;
-            const noEuroCancel = data.filter(d => d.euro_zone === 'Non-Euro' && d.is_canceled === 1).length;
-            
-            const euroRate = (euroCancel / euro) * 100;
-            const noEuroRate = (noEuroCancel / noEuro) * 100;
-            
-            // Correlación
-            const noEuroData = data.filter(d => d.euro_zone === 'Non-Euro');
-            let sumXY = 0, sumX = 0, sumY = 0, sumX2 = 0, sumY2 = 0;
-            
-            noEuroData.forEach(d => {
-                const x = d.exchange_variation;
-                const y = d.is_canceled;
-                sumXY += x * y;
-                sumX += x;
-                sumY += y;
-                sumX2 += x * x;
-                sumY2 += y * y;
-            });
-            
-            const n = noEuroData.length;
-            const correlation = (n * sumXY - sumX * sumY) / 
-                Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-            
-            const rSquared = (correlation * correlation) * 100;
-            
-            return {
-                total,
-                euro,
-                noEuro,
-                euroRate,
-                noEuroRate,
-                correlation: isNaN(correlation) ? 0 : correlation,
-                rSquared: isNaN(rSquared) ? 0 : rSquared
-            };
-        }
+<!-- ============ SCROLLY ============ -->
+<div class="scrolly">
 
-        // Cargar datos
-        async function cargarDatos() {
-            try {
-                const response = await fetch('./data/hotel_bookings_enriched.csv');
-                const csvText = await response.text();
-                const rawData = parseCSV(csvText);
-                const data = procesarDatos(rawData);
-                const metricas = calcularMetricas(data);
-                
-                DATOS_GLOBALES = { data, metricas };
-                
-                // Actualizar métricas en pantalla
-                document.getElementById('metric-euro').textContent = 
-                    `${(metricas.euro / metricas.total * 100).toFixed(1)}%`;
-                document.getElementById('metric-no-euro').textContent = 
-                    `${(metricas.noEuro / metricas.total * 100).toFixed(1)}%`;
-                document.getElementById('metric-cancel-euro').textContent = 
-                    `${metricas.euroRate.toFixed(1)}%`;
-                document.getElementById('metric-cancel-no-euro').textContent = 
-                    `${metricas.noEuroRate.toFixed(1)}%`;
-                document.getElementById('metric-correlation').textContent = 
-                    `${metricas.correlation.toFixed(4)}`;
-                document.getElementById('metric-rsquared').textContent = 
-                    `${metricas.rSquared.toFixed(2)}%`;
-                
-                console.log('Datos cargados:', metricas);
-                
-                // Redibujar gráficos con datos reales
-                setTimeout(() => {
-                    dibujarGraficosReales();
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error cargando CSV:', error);
-                alert('Error cargando datos. Verifica que hotel_bookings_enriched.csv esté en el mismo directorio.');
-            }
-        }
+  <div class="narrative">
 
-        function dibujarGraficosReales() {
-            const { data, metricas } = DATOS_GLOBALES;
-            
-            // GRÁFICO 1: SANKEY CON DATOS REALES
-            dibujarSankeyReal(data);
-            
-            // GRÁFICO 3: SCATTER CON DATOS REALES
-            dibujarScatterReal(data);
-            
-            // GRÁFICO 4: THRESHOLD CON DATOS REALES
-            dibujarThresholdReal(data);
-            
-            // GRÁFICO 6: BUBBLE CON DATOS REALES
-            dibujarBubbleReal(data);
-        }
+    <article class="step" data-step="0">
+      <div class="chapter-tag"><span class="num">I</span> El panorama general</div>
+      <h2>Doce pa&iacute;ses, una <em>misma fricci&oacute;n</em>.</h2>
+      <p>
+        Antes de los matices, el agregado. De las 110,579 reservas del dataset, <strong>24,659</strong> proceden
+        de pa&iacute;ses cuya divisa no es el euro. Reino Unido domina el volumen con
+        <span class="data-pill">12,051</span> reservas; le siguen Brasil, Estados Unidos, Suiza, China, Suecia y otros seis pa&iacute;ses.
+      </p>
+      <p>
+        Cada barra representa el <strong>volumen de reservas</strong>; su tono codifica la <strong>tasa media de cancelaci&oacute;n</strong>.
+        El patr&oacute;n salta a la vista: las reservas que <em>llegan</em> desde monedas inestables (Brasil 37.5%, Rusia 38.4%, China-CHN 46.3%)
+        cancelan a tasas que <strong>duplican</strong> las de mercados estables como Suiza o Reino Unido.
+      </p>
+      <div class="insight">
+        <strong>Lectura inicial</strong>
+        La cancelaci&oacute;n no se distribuye al azar entre divisas: se concentra
+        donde la moneda tiembla con m&aacute;s fuerza.
+      </div>
+    </article>
 
-        // =====================================================================
-        // GRÁFICO 1: SANKEY CON DATOS REALES
-        // =====================================================================
+    <article class="step" data-step="1">
+      <div class="chapter-tag"><span class="num">II</span> La densidad del riesgo</div>
+      <h2>El <em>lead time</em> amplifica la exposici&oacute;n.</h2>
+      <p>
+        Este mapa de calor cruza la magnitud absoluta de la <strong>variaci&oacute;n cambiaria</strong> (eje X)
+        con segmentos de <strong>lead time</strong> (eje Y, d&iacute;as entre reserva y arribo).
+        El color codifica la tasa de cancelaci&oacute;n.
+      </p>
+      <p>
+        Las reservas hechas con <strong>menos de 7 d&iacute;as</strong> de antelaci&oacute;n casi nunca se cancelan (apenas 5%).
+        Pero a medida que el horizonte de la reserva se alarga, la cancelaci&oacute;n crece monot&oacute;nicamente:
+        el cuadrante superior derecho — reservas de m&aacute;s de 6 meses en monedas vol&aacute;tiles — supera el <strong>33%</strong>.
+      </p>
+      <div class="insight">
+        <strong>Hallazgo</strong>
+        El tiempo es el verdadero mecanismo de transmisi&oacute;n del riesgo cambiario.
+        Cuanto m&aacute;s tiempo separe a la reserva del arribo, m&aacute;s ventana tiene la moneda para moverse.
+      </div>
+    </article>
 
-        function dibujarSankeyReal(data) {
-            // Contar por país y resultado
-            const porPais = {};
-            
-            data.forEach(d => {
-                if (!porPais[d.country]) {
-                    porPais[d.country] = { total: 0, cancelado: 0, completado: 0 };
-                }
-                porPais[d.country].total++;
-                if (d.is_canceled === 1) {
-                    porPais[d.country].cancelado++;
-                } else {
-                    porPais[d.country].completado++;
-                }
-            });
-            
-            // Top 8 países
-            const paises = Object.entries(porPais)
-                .sort((a, b) => b[1].total - a[1].total)
-                .slice(0, 8)
-                .map(([country, stats]) => ({country, ...stats}));
-            
-            // Crear estructura Sankey
-            const nodes = [];
-            const links = [];
-            let nodeIdx = 0;
-            const nodeMap = {};
-            
-            // Nodos: países
-            paises.forEach(p => {
-                nodeMap[`pais_${p.country}`] = nodeIdx;
-                nodes.push({id: `pais_${p.country}`, name: p.country});
-                nodeIdx++;
-            });
-            
-            // Nodos: categorías (Eurozona)
-            const euroCountries = new Set(['PRT', 'FRA', 'ESP', 'DEU', 'ITA', 'IRL', 'BEL', 'NLD']);
-            nodeMap['euro'] = nodeIdx;
-            nodes.push({id: 'euro', name: 'Euro'});
-            nodeIdx++;
-            
-            nodeMap['no-euro'] = nodeIdx;
-            nodes.push({id: 'no-euro', name: 'No-Euro'});
-            nodeIdx++;
-            
-            // Nodos: resultados
-            nodeMap['completó'] = nodeIdx;
-            nodes.push({id: 'completó', name: 'Completó'});
-            nodeIdx++;
-            
-            nodeMap['canceló'] = nodeIdx;
-            nodes.push({id: 'canceló', name: 'Canceló'});
-            nodeIdx++;
-            
-            // Enlaces: país -> eurozona
-            paises.forEach(p => {
-                const esCurrencyEuro = euroCountries.has(p.country);
-                const destino = esCurrencyEuro ? 'euro' : 'no-euro';
-                
-                links.push({
-                    source: nodeMap[`pais_${p.country}`],
-                    target: nodeMap[destino],
-                    value: p.total
-                });
-            });
-            
-            // Enlaces: eurozona -> resultado
-            data.forEach(d => {
-                const esEuro = euroCountries.has(d.country);
-                const origen = esEuro ? 'euro' : 'no-euro';
-                const destino = d.is_canceled === 1 ? 'canceló' : 'completó';
-                
-                const existingLink = links.find(l => 
-                    l.source === nodeMap[origen] && l.target === nodeMap[destino]
-                );
-                
-                if (existingLink) {
-                    existingLink.value++;
-                } else {
-                    links.push({
-                        source: nodeMap[origen],
-                        target: nodeMap[destino],
-                        value: 1
-                    });
-                }
-            });
-            
-            // Dibujar con Plotly (más fácil que D3 para Sankey real)
-            const trace = {
-                type: 'sankey',
-                node: {
-                    pad: 15,
-                    thickness: 20,
-                    line: {color: 'black', width: 0.5},
-                    label: nodes.map(n => n.name),
-                    color: nodes.map((n, i) => {
-                        if (n.id.startsWith('pais')) return '#0066cc';
-                        if (n.id === 'euro') return '#ff9900';
-                        if (n.id === 'no-euro') return '#ff6600';
-                        if (n.id === 'completó') return '#28a745';
-                        if (n.id === 'canceló') return '#dc3545';
-                        return '#999';
-                    })
-                },
-                link: {
-                    source: links.map(l => l.source),
-                    target: links.map(l => l.target),
-                    value: links.map(l => l.value),
-                    color: links.map(l => {
-                        const targetNode = nodes[l.target];
-                        if (targetNode.id === 'completó') return 'rgba(40, 167, 69, 0.4)';
-                        if (targetNode.id === 'canceló') return 'rgba(220, 53, 69, 0.4)';
-                        return 'rgba(150, 150, 150, 0.2)';
-                    })
-                }
-            };
-            
-            const layout = {
-                title: 'Flujo Real: País → Eurozona → Resultado',
-                height: 600,
-                font: {size: 11}
-            };
-            
-            Plotly.newPlot('sankey-chart', [trace], layout, {responsive: true});
-        }
+    <article class="step" data-step="2">
+      <div class="chapter-tag"><span class="num">III</span> El efecto asim&eacute;trico</div>
+      <h2>Sorprendentemente, <em>apreciarse</em> tambi&eacute;n cancela.</h2>
+      <p>
+        Aqu&iacute; los pa&iacute;ses se separan en peque&ntilde;os m&uacute;ltiplos. Cada panel muestra c&oacute;mo la tasa de cancelaci&oacute;n var&iacute;a
+        seg&uacute;n el <strong>signo</strong> y magnitud de la fluctuaci&oacute;n cambiaria entre booking y arribo.
+      </p>
+      <p>
+        El hallazgo es contraintuitivo: en GBR, BRA, CHE y USA, las cancelaciones se disparan <strong>en ambos extremos</strong>
+        de la distribuci&oacute;n. Cuando la moneda local se aprecia m&aacute;s de un 6%, las cancelaciones llegan al <strong>54.9%</strong>
+        en Reino Unido y <strong>51.6%</strong> en Brasil.
+        Una apreciaci&oacute;n no solo hace m&aacute;s barato el viaje; tambi&eacute;n incentiva a buscar destinos m&aacute;s ambiciosos.
+      </p>
+      <div class="insight">
+        <strong>Asimetr&iacute;a</strong>
+        La volatilidad no necesita ser destructiva para cancelar. Cualquier movimiento
+        amplio, en cualquier direcci&oacute;n, rompe el supuesto bajo el cual se hizo la reserva.
+      </div>
+    </article>
 
-        // =====================================================================
-        // GRÁFICO 3: SCATTER CON DATOS REALES
-        // =====================================================================
+    <article class="step" data-step="3">
+      <div class="chapter-tag"><span class="num">IV</span> El flujo de la fragilidad</div>
+      <h2>De la divisa vol&aacute;til al <em>Cancelado</em>.</h2>
+      <p>
+        El diagrama de Sankey traza el camino de cada reserva: desde la <strong>clase de volatilidad cambiaria</strong>
+        (izquierda) hasta su estado final (derecha): <em>Check-Out</em>, <em>Cancelado</em> o <em>No-Show</em>.
+      </p>
+      <p>
+        Las reservas con variaci&oacute;n cambiaria <strong>estable</strong> (&lt;1%) cancelan al 19.8%.
+        Las de variaci&oacute;n <strong>extrema</strong> (&gt;6%) cancelan al <strong>27.4%</strong>.
+        El flujo no es dram&aacute;tico pero es <em>sistem&aacute;tico</em>: cada nivel adicional de volatilidad mueve la balanza hacia la izquierda.
+      </p>
+      <div class="insight">
+        <strong>Diagn&oacute;stico</strong>
+        El riesgo cambiario no es un detalle contable. Es un <em>filtro</em>
+        que decide qu&eacute; reservas sobreviven hasta la noche del check-in.
+      </div>
+    </article>
 
-        function dibujarScatterReal(data) {
-            const noEuro = data.filter(d => d.euro_zone === 'Non-Euro');
-            
-            const x = [];
-            const y = [];
-            const colors = [];
-            
-            noEuro.forEach(d => {
-                x.push(parseFloat(d.exchange_variation) * 100);
-                y.push(d.is_canceled + (Math.random() - 0.5) * 0.08);
-                colors.push(d.is_canceled === 1 ? 'rgba(220, 53, 69, 0.6)' : 'rgba(0, 102, 204, 0.4)');
-            });
-            
-            const trace = {
-                x: x,
-                y: y,
-                mode: 'markers',
-                type: 'scatter',
-                marker: {color: colors, size: 4, opacity: 0.6},
-                name: 'Observaciones'
-            };
-            
-            const layout = {
-                title: 'Variación Cambiaria vs Cancelación (Datos Reales)',
-                xaxis: {title: 'Variación (%)'},
-                yaxis: {title: 'Cancelado', range: [-0.2, 1.2]},
-                height: 500,
-                hovermode: 'closest'
-            };
-            
-            Plotly.newPlot('scatter-chart', [trace], layout, {responsive: true});
-        }
+    <article class="step" data-step="4">
+      <div class="chapter-tag"><span class="num">V</span> El cruce financiero</div>
+      <h2>Precio, volatilidad y <em>masa cr&iacute;tica</em>.</h2>
+      <p>
+        Cada burbuja es un pa&iacute;s. En el eje X, su <strong>volatilidad media absoluta</strong>;
+        en el eje Y, el <strong>ADR medio</strong> (precio por noche en EUR);
+        el tama&ntilde;o codifica el <strong>volumen de reservas</strong> y el color la tasa de cancelaci&oacute;n.
+      </p>
+      <p>
+        El cuadrante peligroso es el inferior derecho: muchos hu&eacute;spedes, divisa
+        inestable, precios medios. Brasil destaca con la combinaci&oacute;n m&aacute;s adversa:
+        ADR de <span class="data-pill">$112</span>, volatilidad media del 5.3%, y 37.5% de cancelaci&oacute;n.
+        Reino Unido, con su enorme masa, importa por escala m&aacute;s que por intensidad.
+      </p>
+      <div class="insight">
+        <strong>Implicaci&oacute;n operativa</strong>
+        Los hu&eacute;spedes de mercados vol&aacute;tiles no son los m&aacute;s rentables por reserva,
+        pero su <em>masa</em> representa una exposici&oacute;n material al riesgo de cancelaci&oacute;n.
+      </div>
+    </article>
 
-        // =====================================================================
-        // GRÁFICO 4: THRESHOLD CON DATOS REALES
-        // =====================================================================
+    <article class="step" data-step="5">
+      <div class="chapter-tag"><span class="num">VI</span> El impacto monetizado</div>
+      <h2>$2.95 millones, <em>evaporados</em>.</h2>
+      <p>
+        La l&iacute;nea final convierte la narrativa en p&eacute;rdida concreta:
+        <strong>ingreso esperado</strong> (l&iacute;nea oscura) frente a
+        <strong>ingreso realizado</strong> tras descontar cancelaciones (l&iacute;nea rojo-&oacute;xido),
+        agregados por mes de llegada entre julio 2015 y agosto 2017.
+      </p>
+      <p>
+        El &aacute;rea sombreada entre ambas l&iacute;neas es el <strong>costo del riesgo cambiario</strong>:
+        ingresos que el sistema gener&oacute; en reservas, pero que la combinaci&oacute;n de volatilidad
+        y largo lead time evapor&oacute; antes de la facturaci&oacute;n.
+      </p>
+      <div class="insight">
+        <strong>Conclusi&oacute;n</strong>
+        El gap acumulado asciende a <em>$2.95M</em> &mdash; un <strong>28.4%</strong> del ingreso bruto Non-Euro.
+        El tipo de cambio no aparece en ning&uacute;n balance hotelero, pero firma cada cancelaci&oacute;n.
+      </div>
+    </article>
 
-        function dibujarThresholdReal(data) {
-            const noEuro = data.filter(d => d.euro_zone === 'Non-Euro');
-            
-            // Crear bins de variación
-            const bins = [];
-            const binEdges = [-40, -30, -20, -10, 0, 10, 20, 25];
-            
-            for (let i = 0; i < binEdges.length - 1; i++) {
-                const lower = binEdges[i];
-                const upper = binEdges[i + 1];
-                const binData = noEuro.filter(d => {
-                    const var_pct = d.exchange_variation * 100;
-                    return var_pct >= lower && var_pct < upper;
-                });
-                
-                if (binData.length > 0) {
-                    const cancelRate = (binData.filter(d => d.is_canceled === 1).length / binData.length) * 100;
-                    bins.push({
-                        label: `${lower}% to ${upper}%`,
-                        value: cancelRate,
-                        count: binData.length
-                    });
-                }
-            }
-            
-            const ctx = document.getElementById('threshold-chart').getContext('2d');
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: bins.map(b => b.label),
-                    datasets: [
-                        {
-                            label: 'Datos Reales',
-                            data: bins.map(b => b.value),
-                            borderColor: '#0066cc',
-                            backgroundColor: 'rgba(0, 102, 204, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0,
-                            pointRadius: 5
-                        },
-                        {
-                            label: 'Spline Suavizado',
-                            data: bins.map(b => b.value),
-                            borderColor: '#dc3545',
-                            backgroundColor: 'transparent',
-                            borderWidth: 3,
-                            fill: false,
-                            tension: 0.4,
-                            pointRadius: 0
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {display: true, text: 'Umbrales Críticos (Datos Reales)'}
-                    },
-                    scales: {
-                        y: {title: {display: true, text: 'Cancelación (%)'}, min: 0, max: 100},
-                        x: {title: {display: true, text: 'Variación (%)'}}
-                    }
-                }
-            });
-        }
+  </div>
 
-        // =====================================================================
-        // GRÁFICO 6: BUBBLE CON DATOS REALES
-        // =====================================================================
+  <div class="graphic-wrap">
+    <div class="graphic-inner">
+      <div class="graphic-header">
+        <div class="graphic-title" id="g-title">Panorama por pa&iacute;s</div>
+        <div class="graphic-meta" id="g-meta">Cap&iacute;tulo I · Volumen &times; Cancelaci&oacute;n</div>
+      </div>
+      <div class="chart" id="chart"></div>
+    </div>
+  </div>
 
-        function dibujarBubbleReal(data) {
-            // Crear bins de lead_time y variación
-            const bubbles = [];
-            
-            for (let lt = 0; lt <= 400; lt += 50) {
-                for (let var_min = -40; var_min <= 20; var_min += 5) {
-                    const subset = data.filter(d => {
-                        const var_pct = d.exchange_variation * 100;
-                        return d.lead_time >= lt && d.lead_time < (lt + 50) &&
-                            var_pct >= var_min && var_pct < (var_min + 5);
-                    });
-                    
-                    if (subset.length > 10) {
-                        const cancelRate = (subset.filter(d => d.is_canceled === 1).length / subset.length) * 100;
-                        bubbles.push({
-                            x: lt + 25,
-                            y: var_min + 2.5,
-                            size: Math.max(5, cancelRate / 2),
-                            cancelRate: cancelRate,
-                            count: subset.length
-                        });
-                    }
-                }
-            }
-            
-            const trace = {
-                x: bubbles.map(b => b.x),
-                y: bubbles.map(b => b.y),
-                mode: 'markers',
-                marker: {
-                    size: bubbles.map(b => b.size),
-                    color: bubbles.map(b => b.cancelRate),
-                    colorscale: 'Reds',
-                    showscale: true,
-                    colorbar: {title: 'Cancel %'}
-                },
-                text: bubbles.map(b => `${b.cancelRate.toFixed(1)}% (n=${b.count})`),
-                hovertemplate: '<b>Lead Time:</b> %{x:.0f}d<br><b>Var:</b> %{y:.2f}%<br><b>Cancel:</b> %{text}'
-            };
-            
-            const layout = {
-                title: 'Anticipación y Riesgo (Datos Reales)',
-                xaxis: {title: 'Lead Time (días)'},
-                yaxis: {title: 'Variación (%)'},
-                height: 500
-            };
-            
-            Plotly.newPlot('bubble-chart', [trace], layout, {responsive: true});
-        }
+</div>
 
-        // =====================================================================
-        // GESTIÓN DE PESTAÑAS
-        // =====================================================================
+<!-- ============ OUTRO ============ -->
+<section class="outro">
+  <div class="outro-inner">
+    <div class="chapter-tag"><span class="num">FIN</span> S&iacute;ntesis ejecutiva</div>
+    <h2>La volatilidad cambiaria es una <em>cancelaci&oacute;n silenciosa</em>.</h2>
 
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-                
-                this.classList.add('active');
-                const sectionId = 'section-' + this.getAttribute('data-tab');
-                document.getElementById(sectionId).classList.add('active');
-                
-                setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
-            });
-        });
+    <div class="takeaways">
+      <div class="takeaway">
+        <div class="ti">01 · Exposici&oacute;n</div>
+        <h3>El lead time es el detonante</h3>
+        <p>Las reservas de menos de una semana casi nunca se cancelan (5%). M&aacute;s all&aacute; de 6 meses, una de cada tres se pierde. El tiempo es el canal de transmisi&oacute;n del riesgo cambiario.</p>
+      </div>
+      <div class="takeaway">
+        <div class="ti">02 · Asimetr&iacute;a</div>
+        <h3>Apreciarse tambi&eacute;n duele</h3>
+        <p>Una apreciaci&oacute;n &gt;6% de la moneda local dispara la cancelaci&oacute;n al 49%, m&aacute;s incluso que una devaluaci&oacute;n equivalente. Lo que importa no es la direcci&oacute;n, sino la magnitud.</p>
+      </div>
+      <div class="takeaway">
+        <div class="ti">03 · Geograf&iacute;a</div>
+        <h3>Brasil, Rusia y China lideran</h3>
+        <p>Tres mercados emergentes concentran las tasas de cancelaci&oacute;n m&aacute;s altas (37-46%). Su volatilidad cambiaria no es coyuntural: es estructural.</p>
+      </div>
+      <div class="takeaway">
+        <div class="ti">04 · Monetizaci&oacute;n</div>
+        <h3>$2.95M evaporados</h3>
+        <p>El gap entre ingreso reservado e ingreso realizado dimensiona el problema. Es el 28% de los ingresos Non-Euro — la m&eacute;trica que deber&iacute;a entrar al P&amp;L.</p>
+      </div>
+    </div>
 
-        // =====================================================================
-        // DIBUJAR GRÁFICOS SIMULADOS (placeholder)
-        // =====================================================================
+    <div class="colophon">
+      <span>Dataset · Antonio, Almeida &amp; Nunes (2019) — Hotel Bookings Enriched · Filtro euro_zone == 'Non-Euro'</span>
+      <span>StoryTelling D3.js + d3</span>
+      <span>Periodo datos: 2015-07 / 2017-08</span>
+      <span>Glauco Durango</span>
+      <span>Visualización de datos · UOC · 2026</span>
+    </div>
+  </div>
+</section>
 
-        function drawRidgeline() {
-            const ctx = document.getElementById('ridgeline-chart').getContext('2d');
-            const countries = ['UK', 'Brasil', 'USA', 'Suecia'];
-            const x = Array.from({length: 40}, (_, i) => -30 + i);
-            
-            const datasets = countries.map((country, idx) => {
-                const y = x.map(xi => {
-                    const mean = [-3.4, 1.55, 0, 1.2][idx];
-                    const std = [5.5, 6.2, 4.8, 5.0][idx];
-                    return Math.exp(-Math.pow(xi - mean, 2) / (2 * std * std)) + idx * 0.15;
-                });
-                
-                return {
-                    label: country,
-                    data: y,
-                    borderColor: `hsl(${idx * 90}, 70%, 50%)`,
-                    backgroundColor: `hsla(${idx * 90}, 70%, 50%, 0.3)`,
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0
-                };
-            });
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {labels: x, datasets: datasets},
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {position: 'right'},
-                        title: {display: true, text: 'Distribución de Variación'}
-                    }
-                }
-            });
-        }
+<!-- =================================================================== -->
+<!-- ============ DATA + VISUALIZATION JAVASCRIPT ===================== -->
+<!-- =================================================================== -->
+<script>
+// =====================================================================
+// 1. DATOS REALES PRE-AGREGADOS (desde el dataset hotel_bookings_enriched
+//    con filtro euro_zone == 'Non-Euro', n=24,659 reservas)
+// =====================================================================
+const BUNDLE = {"totals":{"total_bookings":24659,"total_countries":12,"total_currencies":11,"overall_cancel_rate":0.24684699298430593,"revenue_expected":10383949.469999999,"revenue_realized":7437560.68,"revenue_gap":2946388.789999999,"gap_pct":0.2837445230749952,"var_min":-0.4047557442466426,"var_max":0.2544882603993442,"var_mean":-0.018325960640204926,"date_min":"2015","date_max":"2017"},"byCountry":[{"country":"BRA","n":2210,"cancel_rate":0.3751,"ex_var_mean":0.0155,"abs_var_mean":0.0528,"abs_var_std":0.0706,"adr_mean":111.6645,"lead_time_mean":83.5842,"revenue_expected":861007.52,"revenue_realized":474782.78,"name":"Brasil","currency":"BRL"},{"country":"CHE","n":1721,"cancel_rate":0.2487,"ex_var_mean":-0.0056,"abs_var_mean":0.013,"abs_var_std":0.0188,"adr_mean":122.3464,"lead_time_mean":91.355,"revenue_expected":793252.29,"revenue_realized":547591.16,"name":"Suiza","currency":"CHF"},{"country":"CHN","n":997,"cancel_rate":0.4634,"ex_var_mean":-0.0078,"abs_var_mean":0.0128,"abs_var_std":0.0169,"adr_mean":110.7607,"lead_time_mean":42.8295,"revenue_expected":292122.44,"revenue_realized":123074.47,"name":"China (CHN)","currency":"CNY"},{"country":"CN","n":1275,"cancel_rate":0.1992,"ex_var_mean":-0.0212,"abs_var_mean":0.0266,"abs_var_std":0.0273,"adr_mean":109.0294,"lead_time_mean":118.6612,"revenue_expected":510016.73,"revenue_realized":385436.5,"name":"China (CN)","currency":"CNY"},{"country":"GBR","n":12051,"cancel_rate":0.2034,"ex_var_mean":-0.034,"abs_var_mean":0.0464,"abs_var_std":0.0586,"adr_mean":96.6251,"lead_time_mean":127.6982,"revenue_expected":5282783.8,"revenue_realized":4110611.61,"name":"Reino Unido","currency":"GBP"},{"country":"ISR","n":666,"cancel_rate":0.2538,"ex_var_mean":0.0121,"abs_var_mean":0.0249,"abs_var_std":0.0333,"adr_mean":111.1944,"lead_time_mean":89.042,"revenue_expected":193233.27,"revenue_realized":128746.86,"name":"Israel","currency":"ILS"},{"country":"NOR","n":606,"cancel_rate":0.2987,"ex_var_mean":-0.0098,"abs_var_mean":0.0267,"abs_var_std":0.0327,"adr_mean":121.8337,"lead_time_mean":122.9076,"revenue_expected":317357.29,"revenue_realized":204134.41,"name":"Noruega","currency":"NOK"},{"country":"POL","n":909,"cancel_rate":0.2343,"ex_var_mean":0.0012,"abs_var_mean":0.0172,"abs_var_std":0.0219,"adr_mean":108.2773,"lead_time_mean":91.2167,"revenue_expected":397784.01,"revenue_realized":281045.28,"name":"Polonia","currency":"PLN"},{"country":"ROU","n":500,"cancel_rate":0.268,"ex_var_mean":-0.0034,"abs_var_mean":0.0079,"abs_var_std":0.0095,"adr_mean":115.0327,"lead_time_mean":108.154,"revenue_expected":274296.7,"revenue_realized":190050.03,"name":"Ruman\u00eda","currency":"RON"},{"country":"RUS","n":623,"cancel_rate":0.3836,"ex_var_mean":0.006,"abs_var_mean":0.0616,"abs_var_std":0.0837,"adr_mean":120.267,"lead_time_mean":81.297,"revenue_expected":308036.18,"revenue_realized":166591.27,"name":"Rusia","currency":"RUB"},{"country":"SWE","n":1016,"cancel_rate":0.2234,"ex_var_mean":-0.0091,"abs_var_mean":0.0158,"abs_var_std":0.0187,"adr_mean":113.579,"lead_time_mean":106.6142,"revenue_expected":445504.94,"revenue_realized":334983.15,"name":"Suecia","currency":"SEK"},{"country":"USA","n":2085,"cancel_rate":0.2398,"ex_var_mean":-0.0132,"abs_var_mean":0.0239,"abs_var_std":0.033,"adr_mean":123.6971,"lead_time_mean":77.4221,"revenue_expected":708554.3,"revenue_realized":490513.16,"name":"Estados Unidos","currency":"USD"}],"heatmap":{"rows":["0\u20137 d","8\u201330 d","31\u201390 d","91\u2013180 d","181\u2013365 d",">365 d"],"cols":["<0.5%","0.5\u20131.5%","1.5\u20133%","3\u20136%",">6%"],"cells":[{"r":"0\u20137 d","c":"<0.5%","rate":0.048505358150028204,"n":1773},{"r":"0\u20137 d","c":"0.5\u20131.5%","rate":0.06129032258064516,"n":620},{"r":"0\u20137 d","c":"1.5\u20133%","rate":0.09411764705882353,"n":170},{"r":"0\u20137 d","c":"3\u20136%","rate":0.02857142857142857,"n":35},{"r":"0\u20137 d","c":">6%","rate":0.0,"n":4},{"r":"8\u201330 d","c":"<0.5%","rate":0.21706263498920086,"n":926},{"r":"8\u201330 d","c":"0.5\u20131.5%","rate":0.23194748358862144,"n":1371},{"r":"8\u201330 d","c":"1.5\u20133%","rate":0.22351797862001943,"n":1029},{"r":"8\u201330 d","c":"3\u20136%","rate":0.2068230277185501,"n":469},{"r":"8\u201330 d","c":">6%","rate":0.24778761061946902,"n":113},{"r":"31\u201390 d","c":"<0.5%","rate":0.2966457023060797,"n":954},{"r":"31\u201390 d","c":"0.5\u20131.5%","rate":0.2989571263035921,"n":1726},{"r":"31\u201390 d","c":"1.5\u20133%","rate":0.2741843159702347,"n":1747},{"r":"31\u201390 d","c":"3\u20136%","rate":0.2862849533954727,"n":1502},{"r":"31\u201390 d","c":">6%","rate":0.2549618320610687,"n":655},{"r":"91\u2013180 d","c":"<0.5%","rate":0.2292358803986711,"n":602},{"r":"91\u2013180 d","c":"0.5\u20131.5%","rate":0.2663677130044843,"n":1115},{"r":"91\u2013180 d","c":"1.5\u20133%","rate":0.2759968725566849,"n":1279},{"r":"91\u2013180 d","c":"3\u20136%","rate":0.25680159256801594,"n":1507},{"r":"91\u2013180 d","c":">6%","rate":0.3326191751472951,"n":1867},{"r":"181\u2013365 d","c":"<0.5%","rate":0.28052805280528054,"n":303},{"r":"181\u2013365 d","c":"0.5\u20131.5%","rate":0.3070469798657718,"n":596},{"r":"181\u2013365 d","c":"1.5\u20133%","rate":0.276885043263288,"n":809},{"r":"181\u2013365 d","c":"3\u20136%","rate":0.30427350427350425,"n":1170},{"r":"181\u2013365 d","c":">6%","rate":0.28757828810020875,"n":1916},{"r":">365 d","c":"<0.5%","rate":null,"n":0},{"r":">365 d","c":"0.5\u20131.5%","rate":0.16666666666666666,"n":6},{"r":">365 d","c":"1.5\u20133%","rate":0.0,"n":2},{"r":">365 d","c":"3\u20136%","rate":0.02,"n":50},{"r":">365 d","c":">6%","rate":0.0,"n":343}]},"smallMultiples":{"GBR":{"name":"Reino Unido","n":12051,"cancel_rate_total":0.20338561115260145,"buckets":[{"bin":"<-6%","n":3056,"cancel":0.19175392670157068},{"bin":"-6/-3%","n":1914,"cancel":0.23458725182863113},{"bin":"-3/-1%","n":2120,"cancel":0.20141509433962265},{"bin":"\u00b11%","n":2721,"cancel":0.17750826901874311},{"bin":"1/3%","n":1336,"cancel":0.19535928143712575},{"bin":"3/6%","n":709,"cancel":0.19464033850493653},{"bin":">6%","n":195,"cancel":0.5487179487179488}]},"BRA":{"name":"Brasil","n":2210,"cancel_rate_total":0.3751131221719457,"buckets":[{"bin":"<-6%","n":278,"cancel":0.33093525179856115},{"bin":"-6/-3%","n":136,"cancel":0.4632352941176471},{"bin":"-3/-1%","n":259,"cancel":0.3783783783783784},{"bin":"\u00b11%","n":450,"cancel":0.20666666666666667},{"bin":"1/3%","n":259,"cancel":0.305019305019305},{"bin":"3/6%","n":274,"cancel":0.4306569343065693},{"bin":">6%","n":554,"cancel":0.516245487364621}]},"USA":{"name":"Estados Unidos","n":2085,"cancel_rate_total":0.23980815347721823,"buckets":[{"bin":"<-6%","n":176,"cancel":0.45454545454545453},{"bin":"-6/-3%","n":293,"cancel":0.25597269624573377},{"bin":"-3/-1%","n":423,"cancel":0.2624113475177305},{"bin":"\u00b11%","n":815,"cancel":0.1558282208588957},{"bin":"1/3%","n":276,"cancel":0.2427536231884058},{"bin":"3/6%","n":76,"cancel":0.32894736842105265},{"bin":">6%","n":26,"cancel":0.5769230769230769}]},"China":{"name":"China","n":2272,"cancel_rate_total":0.31514084507042256,"buckets":[{"bin":"<-6%","n":130,"cancel":0.19230769230769232},{"bin":"-6/-3%","n":455,"cancel":0.25274725274725274},{"bin":"-3/-1%","n":541,"cancel":0.35489833641404805},{"bin":"\u00b11%","n":946,"cancel":0.3276955602536998},{"bin":"1/3%","n":166,"cancel":0.4457831325301205},{"bin":"3/6%","n":31,"cancel":0.0},{"bin":">6%","n":3,"cancel":0.0}]},"CHE":{"name":"Suiza","n":1721,"cancel_rate_total":0.24869262056943636,"buckets":[{"bin":"<-6%","n":43,"cancel":0.5116279069767442},{"bin":"-6/-3%","n":128,"cancel":0.40625},{"bin":"-3/-1%","n":342,"cancel":0.2719298245614035},{"bin":"\u00b11%","n":969,"cancel":0.19814241486068113},{"bin":"1/3%","n":233,"cancel":0.2875536480686695},{"bin":"3/6%","n":4,"cancel":0.5},{"bin":">6%","n":2,"cancel":0.0}]},"SWE":{"name":"Suecia","n":1016,"cancel_rate_total":0.2234251968503937,"buckets":[{"bin":"<-6%","n":2,"cancel":0.0},{"bin":"-6/-3%","n":143,"cancel":0.36363636363636365},{"bin":"-3/-1%","n":305,"cancel":0.21967213114754097},{"bin":"\u00b11%","n":432,"cancel":0.19675925925925927},{"bin":"1/3%","n":124,"cancel":0.16129032258064516},{"bin":"3/6%","n":10,"cancel":0.3},{"bin":">6%","n":0,"cancel":0}]},"RUS":{"name":"Rusia","n":623,"cancel_rate_total":0.38362760834670945,"buckets":[{"bin":"<-6%","n":123,"cancel":0.2682926829268293},{"bin":"-6/-3%","n":51,"cancel":0.3333333333333333},{"bin":"-3/-1%","n":36,"cancel":0.4722222222222222},{"bin":"\u00b11%","n":109,"cancel":0.23853211009174313},{"bin":"1/3%","n":72,"cancel":0.3472222222222222},{"bin":"3/6%","n":90,"cancel":0.45555555555555555},{"bin":">6%","n":142,"cancel":0.5633802816901409}]},"POL":{"name":"Polonia","n":909,"cancel_rate_total":0.23432343234323433,"buckets":[{"bin":"<-6%","n":0,"cancel":0},{"bin":"-6/-3%","n":77,"cancel":0.03896103896103896},{"bin":"-3/-1%","n":182,"cancel":0.32967032967032966},{"bin":"\u00b11%","n":347,"cancel":0.18155619596541786},{"bin":"1/3%","n":207,"cancel":0.2753623188405797},{"bin":"3/6%","n":95,"cancel":0.30526315789473685},{"bin":">6%","n":1,"cancel":1.0}]},"ISR":{"name":"Israel","n":666,"cancel_rate_total":0.25375375375375375,"buckets":[{"bin":"<-6%","n":15,"cancel":0.4666666666666667},{"bin":"-6/-3%","n":26,"cancel":0.23076923076923078},{"bin":"-3/-1%","n":100,"cancel":0.15},{"bin":"\u00b11%","n":226,"cancel":0.24336283185840707},{"bin":"1/3%","n":150,"cancel":0.4266666666666667},{"bin":"3/6%","n":55,"cancel":0.07272727272727272},{"bin":">6%","n":94,"cancel":0.19148936170212766}]},"NOR":{"name":"Noruega","n":606,"cancel_rate_total":0.2986798679867987,"buckets":[{"bin":"<-6%","n":44,"cancel":0.29545454545454547},{"bin":"-6/-3%","n":123,"cancel":0.45528455284552843},{"bin":"-3/-1%","n":105,"cancel":0.3047619047619048},{"bin":"\u00b11%","n":164,"cancel":0.20121951219512196},{"bin":"1/3%","n":113,"cancel":0.18584070796460178},{"bin":"3/6%","n":43,"cancel":0.5581395348837209},{"bin":">6%","n":14,"cancel":0.14285714285714285}]}},"sankey":[{"vol_class":"Variación alta","status":"Cancelado","value":1272},{"vol_class":"Variación alta","status":"No Cancelado","value":3461},{"vol_class":"Variación estable","status":"Cancelado","value":1550},{"vol_class":"Variación estable","status":"No Cancelado","value":5966},{"vol_class":"Variación extrema","status":"Cancelado","value":1367},{"vol_class":"Variación extrema","status":"No Cancelado","value":3531},{"vol_class":"Variación moderada","status":"Cancelado","value":1898},{"vol_class":"Variación moderada","status":"No Cancelado","value":5614}],"bubble":[{"country":"BRA","name":"Brasil","n":2210,"cancel_rate":0.3751131221719457,"abs_var_mean":0.05278791610851363,"ex_var_mean":0.015458432012547447,"adr_mean":111.66446606334841,"lead_time_mean":83.5841628959276},{"country":"CHE","name":"Suiza","n":1721,"cancel_rate":0.24869262056943636,"abs_var_mean":0.01295939559827666,"ex_var_mean":-0.005645634073690265,"adr_mean":122.34642068564789,"lead_time_mean":91.35502614758862},{"country":"CHN","name":"China (CHN)","n":997,"cancel_rate":0.4633901705115346,"abs_var_mean":0.01278857781649065,"ex_var_mean":-0.007750958865104494,"adr_mean":110.76068204613841,"lead_time_mean":42.82948846539619},{"country":"CN","name":"China (CN)","n":1275,"cancel_rate":0.1992156862745098,"abs_var_mean":0.02660526919003734,"ex_var_mean":-0.021243153998103777,"adr_mean":109.02942745098038,"lead_time_mean":118.66117647058823},{"country":"GBR","name":"Reino Unido","n":12051,"cancel_rate":0.20338561115260145,"abs_var_mean":0.0464119768036993,"ex_var_mean":-0.03402998393346185,"adr_mean":96.62507426769562,"lead_time_mean":127.69819931955854},{"country":"ISR","name":"Israel","n":666,"cancel_rate":0.25375375375375375,"abs_var_mean":0.02489516681548875,"ex_var_mean":0.012112607750623328,"adr_mean":111.19444444444444,"lead_time_mean":89.04204204204204},{"country":"NOR","name":"Noruega","n":606,"cancel_rate":0.2986798679867987,"abs_var_mean":0.026693675485075032,"ex_var_mean":-0.009756251606390534,"adr_mean":121.8337293729373,"lead_time_mean":122.9075907590759},{"country":"POL","name":"Polonia","n":909,"cancel_rate":0.23432343234323433,"abs_var_mean":0.017191786219358456,"ex_var_mean":0.0012439306066690267,"adr_mean":108.27734873487348,"lead_time_mean":91.21672167216721},{"country":"ROU","name":"Ruman\u00eda","n":500,"cancel_rate":0.268,"abs_var_mean":0.007854584051066904,"ex_var_mean":-0.0033641119071671287,"adr_mean":115.03272,"lead_time_mean":108.154},{"country":"RUS","name":"Rusia","n":623,"cancel_rate":0.38362760834670945,"abs_var_mean":0.06160114041868421,"ex_var_mean":0.006008238920299108,"adr_mean":120.26699839486356,"lead_time_mean":81.29695024077047},{"country":"SWE","name":"Suecia","n":1016,"cancel_rate":0.2234251968503937,"abs_var_mean":0.01582420511982552,"ex_var_mean":-0.00911913693674587,"adr_mean":113.57900590551182,"lead_time_mean":106.61417322834646},{"country":"USA","name":"Estados Unidos","n":2085,"cancel_rate":0.23980815347721823,"abs_var_mean":0.023923227606389007,"ex_var_mean":-0.013199171794443928,"adr_mean":123.69705035971224,"lead_time_mean":77.4220623501199}],"temporal":[{"ym":"2015-07","expected":184994.97,"realized":184994.97,"n":270,"cancel_rate":0.0,"ex_var_mean":0.01},{"ym":"2015-08","expected":161148.61,"realized":160776.61,"n":294,"cancel_rate":0.01,"ex_var_mean":-0.02},{"ym":"2015-09","expected":299647.51,"realized":288697.51,"n":729,"cancel_rate":0.13,"ex_var_mean":-0.01},{"ym":"2015-10","expected":251646.73,"realized":225375.19,"n":767,"cancel_rate":0.05,"ex_var_mean":0.0},{"ym":"2015-11","expected":55375.33,"realized":55375.33,"n":227,"cancel_rate":0.0,"ex_var_mean":0.01},{"ym":"2015-12","expected":64469.87,"realized":61843.27,"n":225,"cancel_rate":0.02,"ex_var_mean":-0.01},{"ym":"2016-01","expected":67646.51,"realized":57268.97,"n":306,"cancel_rate":0.08,"ex_var_mean":-0.02},{"ym":"2016-02","expected":121055.32,"realized":89639.08,"n":463,"cancel_rate":0.17,"ex_var_mean":-0.02},{"ym":"2016-03","expected":229343.52,"realized":169197.58,"n":795,"cancel_rate":0.21,"ex_var_mean":-0.01},{"ym":"2016-04","expected":339829.75,"realized":225734.89,"n":959,"cancel_rate":0.28,"ex_var_mean":-0.02},{"ym":"2016-05","expected":372572.08,"realized":301110.88,"n":1070,"cancel_rate":0.16,"ex_var_mean":-0.01},{"ym":"2016-06","expected":501300.39,"realized":415128.0,"n":1091,"cancel_rate":0.19,"ex_var_mean":-0.02},{"ym":"2016-07","expected":594202.2,"realized":461575.81,"n":1093,"cancel_rate":0.25,"ex_var_mean":-0.04},{"ym":"2016-08","expected":575134.08,"realized":376968.35,"n":1017,"cancel_rate":0.32,"ex_var_mean":-0.04},{"ym":"2016-09","expected":605218.07,"realized":457263.38,"n":1418,"cancel_rate":0.22,"ex_var_mean":-0.04},{"ym":"2016-10","expected":539011.88,"realized":384891.4,"n":1651,"cancel_rate":0.24,"ex_var_mean":-0.06},{"ym":"2016-11","expected":257765.21,"realized":186836.0,"n":903,"cancel_rate":0.25,"ex_var_mean":-0.0},{"ym":"2016-12","expected":256569.6,"realized":155715.49,"n":718,"cancel_rate":0.33,"ex_var_mean":0.02},{"ym":"2017-01","expected":224760.98,"realized":138136.1,"n":707,"cancel_rate":0.34,"ex_var_mean":0.02},{"ym":"2017-02","expected":290010.57,"realized":191823.76,"n":976,"cancel_rate":0.29,"ex_var_mean":0.01},{"ym":"2017-03","expected":366838.25,"realized":269649.32,"n":1178,"cancel_rate":0.22,"ex_var_mean":0.0},{"ym":"2017-04","expected":569553.62,"realized":368648.14,"n":1420,"cancel_rate":0.31,"ex_var_mean":0.01},{"ym":"2017-05","expected":777446.66,"realized":492851.86,"n":1839,"cancel_rate":0.33,"ex_var_mean":-0.01},{"ym":"2017-06","expected":834824.57,"realized":574673.26,"n":1606,"cancel_rate":0.29,"ex_var_mean":-0.03},{"ym":"2017-07","expected":1032277.3,"realized":626857.83,"n":1678,"cancel_rate":0.33,"ex_var_mean":-0.03},{"ym":"2017-08","expected":811305.89,"realized":516527.7,"n":1259,"cancel_rate":0.33,"ex_var_mean":-0.05}]};
 
-        function drawSmallMultiples() {
-            const countries = ['UK', 'Brasil', 'USA', 'Suecia'];
-            const traces = [];
-            const layout = {
-                title: 'Reacción por Mercado',
-                height: 600,
-                showlegend: false,
-                xaxis: {domain: [0, 0.48]},
-                yaxis: {domain: [0.52, 1]},
-                xaxis2: {domain: [0.52, 1], anchor: 'y2'},
-                yaxis2: {domain: [0.52, 1], anchor: 'x2'},
-                xaxis3: {domain: [0, 0.48], anchor: 'y3'},
-                yaxis3: {domain: [0, 0.48], anchor: 'x3'},
-                xaxis4: {domain: [0.52, 1], anchor: 'y4'},
-                yaxis4: {domain: [0, 0.48], anchor: 'x4'}
-            };
-            
-            countries.forEach((country, idx) => {
-                const x = Array.from({length: 20}, (_, i) => -20 + i * 2);
-                const sensitivity = [0.8, 0.5, 0.4, 0.7][idx];
-                const y = x.map(xi => 25 + sensitivity * Math.abs(xi) + (Math.random() - 0.5) * 5);
-                
-                traces.push({
-                    x: x,
-                    y: y,
-                    mode: 'lines+markers',
-                    name: country,
-                    xaxis: `x${idx + 1}`,
-                    yaxis: `y${idx + 1}`,
-                    line: {color: `hsl(${idx * 90}, 70%, 50%)`, width: 2}
-                });
-                
-                layout[`xaxis${idx + 1}`] = {
-                    domain: [idx % 2 * 0.48, (idx % 2) * 0.48 + 0.48],
-                    anchor: `y${idx + 1}`,
-                    title: 'Variación %'
-                };
-                layout[`yaxis${idx + 1}`] = {
-                    domain: [Math.floor(idx / 2) * 0.48, Math.floor(idx / 2) * 0.48 + 0.48],
-                    anchor: `x${idx + 1}`,
-                    title: 'Cancelación %'
-                };
-            });
-            
-            Plotly.newPlot('small-multiples-chart', traces, layout, {responsive: true});
-        }
+// =====================================================================
+// 2. PALETA Y UTILIDADES
+// =====================================================================
+const PAIN = '#b03a2e', PAIN_SOFT = '#d97757', PAIN_DEEP = '#6e1f15';
+const GAIN = '#1e6650', GAIN_SOFT = '#4a9b7e';
+const INK = '#1a1612', INK_SOFT = '#4a3f33';
+const NEUTRAL = '#8a7a64', GOLD = '#b88a3f';
 
-        function drawViolin() {
-            const hotels = ['City', 'Resort'];
-            const traces = [];
-            
-            hotels.forEach((hotel, hIdx) => {
-                [0, 1].forEach(canceled => {
-                    const n = canceled === 0 ? 3000 : 1500;
-                    const data = [];
-                    
-                    for (let i = 0; i < n; i++) {
-                        const mean = canceled === 0 ? -2 : 3;
-                        const std = 5;
-                        data.push(mean + (Math.random() - 0.5) * std * 2);
-                    }
-                    
-                    traces.push({
-                        y: data,
-                        name: `${hotel} ${canceled === 0 ? 'No Cancel' : 'Cancel'}`,
-                        side: canceled === 0 ? 'negative' : 'positive',
-                        type: 'violin',
-                        points: false,
-                        line_color: canceled === 0 ? '#999' : '#dc3545',
-                        meanline_visible: true,
-                        x: [hotel]
-                    });
-                });
-            });
-            
-            const layout = {
-                title: 'Distribución de Variación',
-                yaxis: {title: 'Variación (%)'},
-                height: 500,
-                violinmode: 'group'
-            };
-            
-            Plotly.newPlot('violin-chart', traces, layout, {responsive: true});
-        }
+const chart = d3.select('#chart');
+const tooltip = d3.select('#tt');
+function showTT(html, ev) {
+  tooltip.html(html).style('opacity', 1)
+    .style('left', (ev.clientX + 14) + 'px')
+    .style('top', (ev.clientY + 14) + 'px');
+}
+function hideTT(){ tooltip.style('opacity', 0); }
 
-        function drawParallel() {
-            const svg = d3.select("#parallel-chart");
-            const width = svg.node().clientWidth;
-            const height = svg.node().clientHeight;
-            
-            const dimensions = [
-                {name: 'Variación', domain: [-40, 25]},
-                {name: 'Lead Time', domain: [0, 400]},
-                {name: 'ADR', domain: [0, 500]},
-                {name: 'Resultado', domain: [0, 1]}
-            ];
-            
-            const xScale = d3.scalePoint()
-                .domain(dimensions.map(d => d.name))
-                .range([50, width - 50]);
-            
-            const scales = dimensions.map(d => {
-                if (d.name === 'Resultado') {
-                    return d3.scalePoint().domain([0, 1]).range([height, 0]);
-                }
-                return d3.scaleLinear().domain(d.domain).range([height, 0]);
-            });
-            
-            const data = Array.from({length: 100}, () => [
-                Math.random() * 65 - 40,
-                Math.random() * 400,
-                Math.random() * 500,
-                Math.random() > 0.7 ? 1 : 0
-            ]);
-            
-            data.forEach(d => {
-                const path = d.map((v, i) => [xScale(dimensions[i].name), scales[i](v)]);
-                const pathString = path.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join('');
-                
-                svg.append('path')
-                    .attr('d', pathString)
-                    .attr('stroke', d[3] === 1 ? '#dc3545' : '#999')
-                    .attr('stroke-width', d[3] === 1 ? 2 : 0.5)
-                    .attr('fill', 'none')
-                    .attr('opacity', d[3] === 1 ? 0.8 : 0.1);
-            });
-            
-            dimensions.forEach((dim, i) => {
-                const x = xScale(dim.name);
-                svg.append('line')
-                    .attr('x1', x).attr('y1', 0)
-                    .attr('x2', x).attr('y2', height)
-                    .attr('stroke', '#ccc');
-                
-                svg.append('text')
-                    .attr('x', x).attr('y', height + 20)
-                    .attr('text-anchor', 'middle')
-                    .attr('font-size', '12px')
-                    .attr('font-weight', '600')
-                    .text(dim.name);
-            });
-        }
+// Crear contenedores para 6 escenas
+const scenes = {};
+for (let i = 0; i < 6; i++) {
+  scenes[i] = chart.append('div').attr('class','scene').attr('id','scene-'+i);
+}
 
-        function drawHorizon() {
-            const ctx = document.getElementById('horizon-chart').getContext('2d');
-            
-            const months = Array.from({length: 33}, (_, i) => {
-                const date = new Date(2015, 6 + i, 1);
-                return date.toLocaleDateString('es-ES', {month: 'short', year: '2-digit'});
-            });
-            
-            const cancelationData = Array.from({length: 33}, (_, i) => {
-                if (i === 12) return 35;
-                if (i === 11 || i === 13) return 32;
-                return 20 + Math.random() * 15;
-            });
-            
-            const variationData = Array.from({length: 33}, (_, i) => {
-                if (i === 12) return 8;
-                if (i === 11 || i === 13) return 5;
-                return -2 + Math.random() * 3;
-            });
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: months,
-                    datasets: [
-                        {
-                            label: 'Cancelación %',
-                            data: cancelationData,
-                            borderColor: '#dc3545',
-                            backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Variación %',
-                            data: variationData,
-                            borderColor: '#0066cc',
-                            backgroundColor: 'rgba(0, 102, 204, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    interaction: {mode: 'index', intersect: false},
-                    plugins: {
-                        legend: {position: 'top'},
-                        title: {display: true, text: 'Early Warning'}
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            position: 'left',
-                            title: {display: true, text: 'Cancelación (%)'}
-                        },
-                        y1: {
-                            type: 'linear',
-                            position: 'right',
-                            title: {display: true, text: 'Variación (%)'},
-                            grid: {drawOnChartArea: false}
-                        }
-                    }
-                }
-            });
-        }
+// =====================================================================
+// ESCENA 0 — Bar chart: volumen por pa&iacute;s, color = % cancelaci&oacute;n
+// =====================================================================
+function renderScene0() {
+  const container = scenes[0];
+  container.html('');
+  const w = container.node().clientWidth, h = container.node().clientHeight;
+  const margin = {top: 50, right: 30, bottom: 75, left: 60};
 
-        // =====================================================================
-        // INICIALIZAR TODO
-        // =====================================================================
+  // Datos: unir CN+CHN en una sola "China" para evitar duplicados visuales
+  const raw = BUNDLE.byCountry.slice();
+  const data = [];
+  const chinaItems = raw.filter(d => d.country === 'CN' || d.country === 'CHN');
+  if (chinaItems.length > 0) {
+    const totalN = d3.sum(chinaItems, d => d.n);
+    const totalCancel = d3.sum(chinaItems, d => d.n * d.cancel_rate);
+    data.push({
+      country: 'China', name: 'China (CN+CHN)', currency: 'CNY',
+      n: totalN, cancel_rate: totalCancel / totalN,
+      adr_mean: d3.mean(chinaItems, d => d.adr_mean)
+    });
+  }
+  raw.filter(d => d.country !== 'CN' && d.country !== 'CHN').forEach(d => data.push(d));
+  data.sort((a,b) => b.n - a.n);
 
-        window.addEventListener('DOMContentLoaded', () => {
-            // Dibujar gráficos placeholder
-            setTimeout(() => {
-                drawRidgeline();
-                drawSmallMultiples();
-                drawViolin();
-                drawParallel();
-                drawHorizon();
-            }, 200);
-            
-            // Cargar datos reales
-            cargarDatos();
-        });
+  const svg = container.append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('preserveAspectRatio','xMidYMid meet');
+  const x = d3.scaleBand().domain(data.map(d=>d.country))
+    .range([margin.left, w - margin.right]).padding(0.28);
 
-        window.addEventListener('resize', () => {
-            Plotly.Plots.resize('scatter-chart');
-            Plotly.Plots.resize('bubble-chart');
-            Plotly.Plots.resize('small-multiples-chart');
-            Plotly.Plots.resize('violin-chart');
-            Plotly.Plots.resize('sankey-chart');
-        });
-    </script>
+  // Escala log soft para que GBR (12k) no aplaste a los dem&aacute;s
+  const y = d3.scaleSqrt().domain([0, d3.max(data, d=>d.n)])
+    .range([h - margin.bottom, margin.top]);
+
+  const color = d3.scaleSequential().domain([0.18, 0.50])
+    .interpolator(d3.interpolateRgbBasis(['#e8d9c0', PAIN_SOFT, PAIN, PAIN_DEEP]));
+
+  // Axes
+  svg.append('g').attr('class','axis')
+    .attr('transform', `translate(0,${h - margin.bottom})`)
+    .call(d3.axisBottom(x).tickSize(0))
+    .selectAll('text')
+    .attr('transform','rotate(-30)').attr('text-anchor','end').attr('dy','0.4em').attr('dx','-0.6em');
+  svg.append('g').attr('class','axis')
+    .attr('transform', `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).tickValues([100,500,1000,2500,5000,10000]).tickFormat(d3.format(',d'))
+      .tickSize(-(w - margin.left - margin.right)))
+    .call(g => g.selectAll('line').attr('stroke','#e0d4bd').attr('stroke-dasharray','2 3'))
+    .call(g => g.select('.domain').remove());
+
+  svg.append('text').attr('class','axis-label')
+    .attr('x', margin.left).attr('y', margin.top - 22)
+    .text('Número de reservas (escala raíz cuadrada)');
+
+  // Bars
+  svg.selectAll('.bar').data(data).enter().append('rect')
+    .attr('class','bar')
+    .attr('x', d => x(d.country))
+    .attr('width', x.bandwidth())
+    .attr('y', h - margin.bottom)
+    .attr('height', 0)
+    .attr('fill', d => color(d.cancel_rate))
+    .attr('stroke', INK).attr('stroke-width', 0.5)
+    .style('cursor','pointer')
+    .on('mousemove', (ev,d) => showTT(`<strong>${d.name}</strong><br/>Moneda: ${d.currency}<br/>Reservas: ${d.n.toLocaleString()}<br/>Cancelaci&oacute;n: <strong>${(d.cancel_rate*100).toFixed(1)}%</strong><br/>ADR medio: $${d.adr_mean.toFixed(0)}`, ev))
+    .on('mouseleave', hideTT)
+    .transition().duration(900).delay((d,i)=>i*60)
+    .attr('y', d => y(d.n))
+    .attr('height', d => h - margin.bottom - y(d.n));
+
+  // % cancellation label encima
+  svg.selectAll('.lab').data(data).enter().append('text')
+    .attr('class','lab')
+    .attr('x', d => x(d.country) + x.bandwidth()/2)
+    .attr('y', d => y(d.n) - 6)
+    .attr('text-anchor','middle')
+    .style('font-family','JetBrains Mono, monospace').style('font-size','10px')
+    .style('fill', INK).style('font-weight','500')
+    .style('opacity', 0)
+    .text(d => (d.cancel_rate*100).toFixed(0)+'%')
+    .transition().delay(900).duration(500).style('opacity',1);
+
+  // Leyenda de gradiente
+  const legendW = 180, legendH = 8;
+  const legendG = svg.append('g').attr('transform',`translate(${w - margin.right - legendW}, ${margin.top - 30})`);
+  const defs = svg.append('defs');
+  const grad = defs.append('linearGradient').attr('id','g0');
+  d3.range(0,1.01,0.1).forEach(t => {
+    grad.append('stop').attr('offset',(t*100)+'%').attr('stop-color', color(0.18 + t*0.32));
+  });
+  legendG.append('rect').attr('width',legendW).attr('height',legendH).attr('fill','url(#g0)').attr('stroke',INK).attr('stroke-width',0.4);
+  legendG.append('text').attr('y', -4).attr('x', 0)
+    .style('font-family','JetBrains Mono, monospace').style('font-size','9px').style('fill',INK_SOFT)
+    .text('TASA DE CANCELACIÓN');
+  legendG.append('text').attr('y', legendH + 12).attr('x', 0)
+    .style('font-family','JetBrains Mono, monospace').style('font-size','9px').style('fill',INK_SOFT).text('18%');
+  legendG.append('text').attr('y', legendH + 12).attr('x', legendW).attr('text-anchor','end')
+    .style('font-family','JetBrains Mono, monospace').style('font-size','9px').style('fill',INK_SOFT).text('50%');
+}
+
+// =====================================================================
+// ESCENA 1 — Heatmap lead_time &times; |variation|
+// =====================================================================
+function renderScene1() {
+  const container = scenes[1];
+  container.html('');
+  const w = container.node().clientWidth, h = container.node().clientHeight;
+  const margin = {top: 50, right: 30, bottom: 80, left: 100};
+
+  const rows = BUNDLE.heatmap.rows;   // lead_time bins
+  const cols = BUNDLE.heatmap.cols;   // variation bins
+  const cells = BUNDLE.heatmap.cells;
+
+  const svg = container.append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('preserveAspectRatio','xMidYMid meet');
+  const x = d3.scaleBand().domain(cols.map((_,i)=>i)).range([margin.left, w - margin.right]).padding(0.05);
+  const y = d3.scaleBand().domain(rows.map((_,i)=>i)).range([margin.top, h - margin.bottom]).padding(0.05);
+  const color = d3.scaleSequential().domain([0.05, 0.35])
+    .interpolator(d3.interpolateRgbBasis(['#f4ede2','#e8d9c0', PAIN_SOFT, PAIN, PAIN_DEEP]));
+
+  const cellData = cells.map(d => ({
+    ...d, ri: rows.indexOf(d.r), ci: cols.indexOf(d.c)
+  }));
+
+  svg.selectAll('.cell').data(cellData).enter().append('rect')
+    .attr('class','cell')
+    .attr('x', d => x(d.ci)).attr('y', d => y(d.ri))
+    .attr('width', x.bandwidth()).attr('height', y.bandwidth())
+    .attr('fill', d => (d.rate == null || d.n < 5) ? '#efe8da' : color(d.rate))
+    .attr('stroke', '#faf6ee').attr('stroke-width', 1)
+    .style('opacity', 0)
+    .style('cursor','pointer')
+    .on('mousemove', (ev,d) => showTT(
+      `<strong>${d.r} &middot; ${d.c}</strong><br/>Reservas: ${d.n.toLocaleString()}<br/>Cancelaci&oacute;n: <strong>${d.rate != null ? (d.rate*100).toFixed(1)+'%' : 'n/d'}</strong>`, ev))
+    .on('mouseleave', hideTT)
+    .transition().duration(700).delay((d,i)=>i*22)
+    .style('opacity', 1);
+
+  svg.selectAll('.cellTxt').data(cellData).enter().append('text')
+    .attr('class','cellTxt')
+    .attr('x', d => x(d.ci) + x.bandwidth()/2)
+    .attr('y', d => y(d.ri) + y.bandwidth()/2 + 4)
+    .attr('text-anchor','middle')
+    .style('font-family','JetBrains Mono, monospace').style('font-size','11px')
+    .style('fill', d => d.rate != null && d.rate > 0.25 ? '#faf6ee' : INK)
+    .style('font-weight','500')
+    .style('opacity', 0)
+    .text(d => (d.n < 5 || d.rate == null) ? '—' : (d.rate*100).toFixed(0)+'%')
+    .transition().delay(900).duration(500).style('opacity', 1);
+
+  // Axes
+  svg.append('g').attr('class','axis')
+    .attr('transform',`translate(0,${h - margin.bottom})`)
+    .call(d3.axisBottom(x).tickFormat(i => cols[i]).tickSize(0))
+    .call(g => g.select('.domain').remove());
+  svg.append('g').attr('class','axis')
+    .attr('transform',`translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).tickFormat(i => rows[i]).tickSize(0))
+    .call(g => g.select('.domain').remove());
+
+  svg.append('text').attr('class','axis-label')
+    .attr('x', w/2).attr('y', h - 30).attr('text-anchor','middle')
+    .text('|exchange_variation|  (magnitud absoluta de la variación cambiaria)');
+  svg.append('text').attr('class','axis-label')
+    .attr('transform','rotate(-90)')
+    .attr('x', -h/2).attr('y', 30).attr('text-anchor','middle')
+    .text('lead_time  (días entre booking y arribo)');
+
+  // Title bar arriba
+  svg.append('text').attr('x', margin.left).attr('y', margin.top - 20)
+    .style('font-family','JetBrains Mono, monospace').style('font-size','9px')
+    .style('fill', INK_SOFT).style('letter-spacing','0.15em')
+    .text('% CANCELACIÓN POR CELDA · n MIN = 5');
+}
+
+// =====================================================================
+// ESCENA 2 — Small multiples: cancel rate por bucket SIGNED por pa&iacute;s
+// =====================================================================
+function renderScene2() {
+  const container = scenes[2];
+  container.html('');
+  const w = container.node().clientWidth, h = container.node().clientHeight;
+ 
+  const countries = Object.keys(BUNDLE.smallMultiples);
+  const cols = 5, rows = Math.ceil(countries.length / cols);
+  const cellW = w/cols, cellH = h/rows;
+  const padding = 14;
+ 
+  const svg = container.append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('preserveAspectRatio','xMidYMid meet');
+ 
+  countries.forEach((code, idx) => {
+    const r = Math.floor(idx / cols), c = idx % cols;
+    const cx = c * cellW + padding, cy = r * cellH + padding;
+    const ww = cellW - padding*2, hh = cellH - padding*2 - 28;
+ 
+    const country = BUNDLE.smallMultiples[code];
+ 
+    const x = d3.scaleBand().domain(country.buckets.map(b=>b.bin)).range([cx, cx+ww]).padding(0.15);
+    const yMax = 0.7;
+    const y = d3.scaleLinear().domain([0, yMax]).range([cy + hh + 18, cy + 22]);
+    const yClamped = v => y(Math.min(v, yMax));
+ 
+    // Background
+    svg.append('rect').attr('x', cx).attr('y', cy + 22).attr('width', ww).attr('height', hh - 4)
+      .attr('fill','#faf6ee').attr('stroke', '#e0d4bd').attr('stroke-width', 0.6);
+ 
+    // 50% reference line
+    svg.append('line').attr('x1', cx).attr('x2', cx + ww)
+      .attr('y1', y(0.5)).attr('y2', y(0.5))
+      .attr('stroke','#c9bba6').attr('stroke-dasharray','2 3').attr('stroke-width',0.6);
+    svg.append('text').attr('x', cx + ww - 2).attr('y', y(0.5) - 2)
+      .attr('text-anchor','end')
+      .style('font-family','JetBrains Mono, monospace').style('font-size','8px')
+      .style('fill', INK_SOFT).text('50%');
+ 
+    // Bars (color per bin sign)
+    svg.selectAll(`.b-${idx}`).data(country.buckets).enter().append('rect')
+      .attr('class',`b-${idx}`)
+      .attr('x', d => x(d.bin))
+      .attr('width', x.bandwidth())
+      .attr('y', cy + hh + 18)
+      .attr('height', 0)
+      .attr('fill', d => {
+        // bins negativos (<-6%, -6/-3%, -3/-1%) = devaluación local (en este dataset = exch_var negativa)
+        // bins positivos (1/3%, 3/6%, >6%) = apreciación local
+        // ±1% = estable
+        if (d.bin === '±1%') return NEUTRAL;
+        if (d.bin.startsWith('<') || d.bin.startsWith('-')) return PAIN_SOFT;
+        return PAIN;
+      })
+      .attr('opacity', d => d.n === 0 ? 0.15 : 0.85)
+      .style('cursor','pointer')
+      .on('mousemove', (ev,d) => showTT(
+        `<strong>${country.name}</strong><br/>Rango ex.var: ${d.bin}<br/>n = ${d.n.toLocaleString()}<br/>Cancel: <strong>${(d.cancel*100).toFixed(1)}%</strong>`, ev))
+      .on('mouseleave', hideTT)
+      .transition().duration(700).delay(idx * 80)
+      .attr('y', d => yClamped(d.cancel))
+      .attr('height', d => Math.max(0, (cy + hh + 18) - yClamped(d.cancel)));
+ 
+    // Marcador "▲" cuando la barra fue recortada por el clamp (cancel > yMax)
+    svg.selectAll(`.ov-${idx}`).data(country.buckets.filter(d => d.cancel > yMax)).enter().append('text')
+      .attr('class',`ov-${idx}`)
+      .attr('x', d => x(d.bin) + x.bandwidth()/2)
+      .attr('y', cy + 18)
+      .attr('text-anchor','middle')
+      .style('font-family','JetBrains Mono, monospace').style('font-size','8px')
+      .style('fill', PAIN_DEEP)
+      .text(d => `${(d.cancel*100).toFixed(0)}% (n=${d.n})`);
+ 
+    // Country name + n (ahora en líneas separadas para no superponerse)
+    svg.append('text').attr('x', cx).attr('y', cy + 12)
+      .style('font-family','Fraunces, serif').style('font-size','13.5px')
+      .style('font-weight', 500).style('fill', INK)
+      .text(country.name);
+    svg.append('text').attr('x', cx + ww).attr('y', cy + 12)
+      .attr('text-anchor','end')
+      .style('font-family','JetBrains Mono, monospace').style('font-size','9.5px')
+      .style('fill', INK_SOFT)
+      .text(`n=${country.n.toLocaleString()} · ${(country.cancel_rate_total*100).toFixed(0)}%`);
+ 
+    // x labels (mostrar el rango)
+    svg.selectAll(`.xt-${idx}`).data(country.buckets).enter().append('text')
+      .attr('class',`xt-${idx}`)
+      .attr('x', d => x(d.bin) + x.bandwidth()/2)
+      .attr('y', cy + hh + 28)
+      .attr('text-anchor','middle')
+      .style('font-family','JetBrains Mono, monospace').style('font-size','7.5px')
+      .style('fill', INK_SOFT)
+      .text(d => d.bin);
+  });
+
+  // Leyenda global arriba
+  const legendY = 4;
+  const legend = svg.append('g').attr('transform', `translate(${padding}, ${legendY})`);
+  const items = [
+    { lbl: 'Devaluación local', color: PAIN_SOFT },
+    { lbl: 'Estable', color: NEUTRAL },
+    { lbl: 'Apreciación local', color: PAIN }
+  ];
+  items.forEach((it, i) => {
+    const g = legend.append('g').attr('transform', `translate(${i*150}, 0)`);
+    g.append('rect').attr('width', 12).attr('height', 8).attr('fill', it.color);
+    g.append('text').attr('x', 18).attr('y', 7)
+      .style('font-family','JetBrains Mono, monospace').style('font-size','9px')
+      .style('fill', INK_SOFT).text(it.lbl);
+  });
+}
+
+// =====================================================================
+// ESCENA 3 — Sankey
+// =====================================================================
+function renderScene3() {
+  const container = scenes[3];
+  container.html('');
+  const w = container.node().clientWidth, h = container.node().clientHeight;
+  const margin = {top: 40, right: 140, bottom: 30, left: 160};
+
+  const rows = BUNDLE.sankey;
+
+  // Los nombres en el bundle vienen como Unicode real con tildes
+  const volOrder = ['Variación estable','Variación moderada','Variación alta','Variación extrema'];
+  const statusOrder = ['No Cancelado','Cancelado'];
+
+  const nodes = [
+    ...volOrder.map(n => ({ name: n, type:'vol' })),
+    ...statusOrder.map(n => ({ name: n, type:'status' }))
+  ];
+  const idx = name => nodes.findIndex(n => n.name === name);
+
+  const links = rows.map(r => ({
+    source: idx(r.vol_class),
+    target: idx(r.status),
+    value: r.value
+  })).filter(l => l.source >= 0 && l.target >= 0);
+
+  const sankey = d3.sankey()
+    .nodeId(d => d.index)
+    .nodeWidth(14)
+    .nodePadding(20)
+    .extent([[margin.left, margin.top],[w - margin.right, h - margin.bottom]]);
+
+  const graph = sankey({
+    nodes: nodes.map((d,i) => ({...d, index:i})),
+    links: links.map(d => ({...d}))
+  });
+
+  const svg = container.append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('preserveAspectRatio','xMidYMid meet');
+
+  const nodeColor = d => {
+    if (d.name === 'Cancelado') return PAIN_DEEP;
+    if (d.name === 'No Cancelado') return GAIN;
+    if (d.name === 'Variación extrema') return PAIN;
+    if (d.name === 'Variación alta') return PAIN_SOFT;
+    if (d.name === 'Variación moderada') return '#c9a26b';
+    return NEUTRAL;
+  };
+
+  const linkColor = d => d.target.name === 'Cancelado' ? PAIN : GAIN_SOFT;
+
+  // Links
+  svg.append('g').attr('fill','none')
+    .selectAll('path').data(graph.links).enter().append('path')
+    .attr('d', d3.sankeyLinkHorizontal())
+    .attr('stroke', linkColor)
+    .attr('stroke-opacity', 0.42)
+    .attr('stroke-width', d => Math.max(1, d.width))
+    .style('opacity', 0)
+    .style('cursor','pointer')
+    .on('mousemove', (ev,d) => {
+      const totalSrc = d.source.value;
+      const pct = (d.value/totalSrc*100).toFixed(1);
+      showTT(`<strong>${d.source.name} &rarr; ${d.target.name}</strong><br/>${d.value.toLocaleString()} reservas<br/>${pct}% del flujo de origen`, ev);
+    })
+    .on('mouseleave', hideTT)
+    .transition().duration(900).style('opacity', 1);
+
+  // Nodes
+  svg.append('g').selectAll('rect').data(graph.nodes).enter().append('rect')
+    .attr('x', d => d.x0).attr('y', d => d.y0)
+    .attr('height', d => d.y1 - d.y0).attr('width', d => d.x1 - d.x0)
+    .attr('fill', nodeColor).attr('stroke', INK).attr('stroke-width', 0.4)
+    .style('opacity', 0)
+    .style('cursor','pointer')
+    .on('mousemove', (ev,d) => {
+      const pct = (d.value / d3.sum(graph.nodes.filter(n=>n.type===d.type), n=>n.value)*100).toFixed(1);
+      showTT(`<strong>${d.name}</strong><br/>n = ${d.value.toLocaleString()}<br/>${pct}% del total`, ev);
+    })
+    .on('mouseleave', hideTT)
+    .transition().duration(700).style('opacity', 1);
+
+  // Labels
+  svg.append('g').selectAll('text').data(graph.nodes).enter().append('text')
+    .attr('x', d => d.x0 < w/2 ? d.x0 - 10 : d.x1 + 10)
+    .attr('y', d => (d.y0 + d.y1)/2 + 4)
+    .attr('text-anchor', d => d.x0 < w/2 ? 'end' : 'start')
+    .style('font-family','Fraunces, serif').style('font-size','13.5px')
+    .style('fill', INK).style('font-weight', 500)
+    .text(d => d.name)
+    .style('opacity', 0).transition().delay(500).duration(700).style('opacity', 1);
+
+  // % per node
+  svg.append('g').selectAll('.nodeN').data(graph.nodes).enter().append('text')
+    .attr('class','nodeN')
+    .attr('x', d => d.x0 < w/2 ? d.x0 - 10 : d.x1 + 10)
+    .attr('y', d => (d.y0 + d.y1)/2 + 19)
+    .attr('text-anchor', d => d.x0 < w/2 ? 'end' : 'start')
+    .style('font-family','JetBrains Mono, monospace').style('font-size','10px')
+    .style('fill', INK_SOFT)
+    .text(d => `n = ${d.value.toLocaleString()}`)
+    .style('opacity', 0).transition().delay(700).duration(700).style('opacity', 1);
+
+  // Top columns headers
+  svg.append('text').attr('x', margin.left - 10).attr('y', margin.top - 18)
+    .attr('text-anchor','end')
+    .style('font-family','JetBrains Mono, monospace').style('font-size','10px')
+    .style('fill', INK_SOFT).style('letter-spacing','0.15em')
+    .text('CLASE DE VOLATILIDAD');
+  svg.append('text').attr('x', w - margin.right + 10).attr('y', margin.top - 18)
+    .attr('text-anchor','start')
+    .style('font-family','JetBrains Mono, monospace').style('font-size','10px')
+    .style('fill', INK_SOFT).style('letter-spacing','0.15em')
+    .text('ESTADO FINAL');
+}
+
+// =====================================================================
+// ESCENA 4 — Bubble chart
+// =====================================================================
+function renderScene4() {
+  const container = scenes[4];
+  container.html('');
+  const w = container.node().clientWidth, h = container.node().clientHeight;
+  const margin = {top: 50, right: 60, bottom: 70, left: 80};
+
+  const raw = BUNDLE.bubble;
+  // unir CN+CHN
+  const data = [];
+  const chinaItems = raw.filter(d => d.country === 'CN' || d.country === 'CHN');
+  if (chinaItems.length > 0) {
+    const totalN = d3.sum(chinaItems, d => d.n);
+    data.push({
+      country: 'China', name: 'China',
+      n: totalN,
+      cancel_rate: d3.sum(chinaItems, d => d.n * d.cancel_rate)/totalN,
+      abs_var_mean: d3.sum(chinaItems, d => d.n * d.abs_var_mean)/totalN,
+      ex_var_mean: d3.sum(chinaItems, d => d.n * d.ex_var_mean)/totalN,
+      adr_mean: d3.sum(chinaItems, d => d.n * d.adr_mean)/totalN,
+      lead_time_mean: d3.sum(chinaItems, d => d.n * d.lead_time_mean)/totalN
+    });
+  }
+  raw.filter(d => d.country !== 'CN' && d.country !== 'CHN').forEach(d => data.push(d));
+
+  const x = d3.scaleLinear().domain([0, d3.max(data, d=>d.abs_var_mean)*1.15]).range([margin.left, w - margin.right]);
+  const y = d3.scaleLinear().domain([80, d3.max(data, d=>d.adr_mean)*1.05]).range([h - margin.bottom, margin.top]);
+  const r = d3.scaleSqrt().domain([0, d3.max(data, d=>d.n)]).range([8, 50]);
+  const color = d3.scaleSequential().domain([0.18, 0.50])
+    .interpolator(d3.interpolateRgbBasis(['#e8d9c0', PAIN_SOFT, PAIN, PAIN_DEEP]));
+
+  const svg = container.append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('preserveAspectRatio','xMidYMid meet');
+
+  // Zona de riesgo (alto |var|)
+  const riskX = x(0.035);
+  svg.append('rect')
+    .attr('x', riskX).attr('y', margin.top)
+    .attr('width', (w - margin.right) - riskX)
+    .attr('height', (h - margin.bottom) - margin.top)
+    .attr('fill', PAIN).attr('opacity', 0.04);
+
+  svg.append('text').attr('x', riskX + 8).attr('y', margin.top + 14)
+    .style('font-family','Fraunces, serif').style('font-style','italic').style('font-size','12px')
+    .style('fill', PAIN_DEEP).style('opacity', 0.65)
+    .text('Zona de exposición elevada (|var| > 3.5%)');
+
+  // Axes
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${h - margin.bottom})`)
+    .call(d3.axisBottom(x).ticks(6).tickFormat(d => (d*100).toFixed(1)+'%'));
+  svg.append('g').attr('class','axis').attr('transform',`translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).ticks(6).tickFormat(d => `$${d}`));
+
+  svg.append('text').attr('class','axis-label')
+    .attr('x', w/2).attr('y', h - 30).attr('text-anchor','middle')
+    .text('|exchange_variation| media (volatilidad cambiaria del país)');
+  svg.append('text').attr('class','axis-label')
+    .attr('transform','rotate(-90)').attr('x', -h/2).attr('y', 24).attr('text-anchor','middle')
+    .text('ADR medio (EUR por noche)');
+
+  // Bubbles
+  svg.selectAll('.bub').data(data).enter().append('circle')
+    .attr('class','bub')
+    .attr('cx', d => x(d.abs_var_mean)).attr('cy', d => y(d.adr_mean))
+    .attr('r', 0).attr('fill', d => color(d.cancel_rate))
+    .attr('stroke', INK).attr('stroke-width', 0.8)
+    .attr('fill-opacity', 0.78)
+    .style('cursor','pointer')
+    .on('mousemove', (ev,d) => showTT(
+      `<strong>${d.name}</strong><br/>|Vol| media: ${(d.abs_var_mean*100).toFixed(2)}%<br/>ADR: $${d.adr_mean.toFixed(0)}<br/>Reservas: ${d.n.toLocaleString()}<br/>Cancel: <strong>${(d.cancel_rate*100).toFixed(1)}%</strong><br/>Lead time medio: ${d.lead_time_mean.toFixed(0)} d`, ev))
+    .on('mouseleave', hideTT)
+    .transition().duration(900).delay((d,i)=>i*70)
+    .attr('r', d => r(d.n));
+
+  svg.selectAll('.bubLab').data(data).enter().append('text')
+    .attr('class','bubLab')
+    .attr('x', d => x(d.abs_var_mean)).attr('y', d => y(d.adr_mean) - r(d.n) - 6)
+    .attr('text-anchor','middle')
+    .style('font-family','Fraunces, serif').style('font-size','12px')
+    .style('font-weight', 500).style('fill', INK)
+    .text(d => d.name)
+    .style('opacity', 0).transition().delay(900).duration(500).style('opacity', 1);
+
+  // Legend
+  const legX = w - margin.right - 130, legY = h - margin.bottom - 70;
+  svg.append('text').attr('x', legX).attr('y', legY - 8)
+    .style('font-family','JetBrains Mono, monospace').style('font-size','9px')
+    .style('fill', INK_SOFT).text('TAMAÑO = VOLUMEN');
+  const refSizes = [500, 2000, 8000];
+  refSizes.forEach((v, i) => {
+    svg.append('circle').attr('cx', legX + 18 + i*40).attr('cy', legY + 22)
+      .attr('r', r(v)).attr('fill','none').attr('stroke', INK_SOFT).attr('stroke-width', 0.8);
+    svg.append('text').attr('x', legX + 18 + i*40).attr('y', legY + 58)
+      .attr('text-anchor','middle')
+      .style('font-family','JetBrains Mono, monospace').style('font-size','9px')
+      .style('fill', INK_SOFT).text(v.toLocaleString());
+  });
+}
+
+// =====================================================================
+// ESCENA 5 — Line chart: expected vs realized revenue
+// =====================================================================
+function renderScene5() {
+  const container = scenes[5];
+  container.html('');
+  const w = container.node().clientWidth, h = container.node().clientHeight;
+  const margin = {top: 60, right: 80, bottom: 60, left: 90};
+
+  const parser = d3.timeParse('%Y-%m');
+  const data = BUNDLE.temporal.map(d => ({...d, date: parser(d.ym)}))
+    .sort((a,b) => a.date - b.date);
+
+  const x = d3.scaleTime().domain(d3.extent(data, d=>d.date)).range([margin.left, w - margin.right]);
+  const y = d3.scaleLinear().domain([0, d3.max(data, d=>d.expected)*1.05]).range([h - margin.bottom, margin.top]);
+
+  const svg = container.append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('preserveAspectRatio','xMidYMid meet');
+
+  svg.append('g').attr('class','axis')
+    .attr('transform',`translate(0,${h - margin.bottom})`)
+    .call(d3.axisBottom(x).ticks(d3.timeMonth.every(3)).tickFormat(d3.timeFormat('%b %Y')));
+  svg.append('g').attr('class','axis')
+    .attr('transform',`translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).ticks(6).tickFormat(d => `$${(d/1000).toFixed(0)}K`));
+
+  // Gap area
+  const areaGap = d3.area()
+    .x(d => x(d.date))
+    .y0(d => y(d.realized))
+    .y1(d => y(d.expected))
+    .curve(d3.curveMonotoneX);
+
+  svg.append('path').datum(data)
+    .attr('fill', PAIN).attr('fill-opacity', 0.13)
+    .attr('d', areaGap);
+
+  // Lines
+  const lineExp = d3.line().x(d=>x(d.date)).y(d=>y(d.expected)).curve(d3.curveMonotoneX);
+  const lineReal = d3.line().x(d=>x(d.date)).y(d=>y(d.realized)).curve(d3.curveMonotoneX);
+
+  const pathE = svg.append('path').datum(data)
+    .attr('fill','none').attr('stroke', INK).attr('stroke-width', 1.6)
+    .attr('d', lineExp);
+  const pathR = svg.append('path').datum(data)
+    .attr('fill','none').attr('stroke', PAIN_DEEP).attr('stroke-width', 2.4)
+    .attr('d', lineReal);
+
+  [pathE, pathR].forEach(p => {
+    const len = p.node().getTotalLength();
+    p.attr('stroke-dasharray', `${len} ${len}`).attr('stroke-dashoffset', len)
+      .transition().duration(1800).attr('stroke-dashoffset', 0);
+  });
+
+  // Endpoint labels
+  const last = data[data.length - 1];
+  svg.append('text').attr('x', x(last.date) + 6).attr('y', y(last.expected) + 4)
+    .style('font-family','Fraunces, serif').style('font-size','12.5px').style('fill', INK)
+    .style('font-weight','500')
+    .text('Esperado');
+  svg.append('text').attr('x', x(last.date) + 6).attr('y', y(last.realized) + 4)
+    .style('font-family','Fraunces, serif').style('font-size','12.5px').style('fill', PAIN_DEEP)
+    .style('font-weight', 600)
+    .text('Realizado');
+
+  // KPIs arriba
+  const totalExp = d3.sum(data, d => d.expected);
+  const totalReal = d3.sum(data, d => d.realized);
+  const totalGap = totalExp - totalReal;
+
+  svg.append('text').attr('x', margin.left).attr('y', margin.top - 28)
+    .style('font-family','JetBrains Mono, monospace').style('font-size','9.5px')
+    .style('fill', INK_SOFT).style('letter-spacing','0.15em')
+    .text('INGRESO MENSUAL · NON-EURO · ADR × NOCHES');
+
+  svg.append('text').attr('x', margin.left).attr('y', margin.top - 10)
+    .style('font-family','Fraunces, serif').style('font-size','14px')
+    .style('font-style','italic').style('fill', PAIN_DEEP)
+    .text(`Gap acumulado: $${(totalGap/1e6).toFixed(2)}M  (${(totalGap/totalExp*100).toFixed(1)}% del ingreso esperado)`);
+
+  svg.append('text').attr('class','axis-label')
+    .attr('transform','rotate(-90)').attr('x', -h/2).attr('y', 24).attr('text-anchor','middle')
+    .text('Ingreso por mes (EUR)');
+
+  // Hover
+  const focus = svg.append('g').style('display','none');
+  focus.append('line').attr('class','hoverLine')
+    .attr('y1', margin.top).attr('y2', h - margin.bottom)
+    .attr('stroke', INK_SOFT).attr('stroke-dasharray','2 3');
+  focus.append('circle').attr('class','hExp').attr('r', 4).attr('fill', INK);
+  focus.append('circle').attr('class','hReal').attr('r', 4).attr('fill', PAIN_DEEP);
+
+  svg.append('rect').attr('x', margin.left).attr('y', margin.top)
+    .attr('width', w - margin.left - margin.right).attr('height', h - margin.top - margin.bottom)
+    .attr('fill','transparent')
+    .on('mouseenter', () => focus.style('display', null))
+    .on('mouseleave', () => { focus.style('display','none'); hideTT(); })
+    .on('mousemove', function(ev) {
+      const mx = d3.pointer(ev, this)[0];
+      const xv = x.invert(mx);
+      const bisect = d3.bisector(d => d.date).left;
+      const i = Math.min(data.length - 1, Math.max(0, bisect(data, xv)));
+      const d = data[i];
+      focus.select('.hoverLine').attr('x1', x(d.date)).attr('x2', x(d.date));
+      focus.select('.hExp').attr('cx', x(d.date)).attr('cy', y(d.expected));
+      focus.select('.hReal').attr('cx', x(d.date)).attr('cy', y(d.realized));
+      const gap = d.expected - d.realized;
+      showTT(
+        `<strong>${d3.timeFormat('%b %Y')(d.date)}</strong><br/>`+
+        `Esperado: $${d.expected.toLocaleString(undefined,{maximumFractionDigits:0})}<br/>`+
+        `<em>Realizado:</em> $${d.realized.toLocaleString(undefined,{maximumFractionDigits:0})}<br/>`+
+        `<strong>P&eacute;rdida:</strong> $${gap.toLocaleString(undefined,{maximumFractionDigits:0})} (${(gap/d.expected*100).toFixed(0)}%)<br/>`+
+        `Reservas: ${d.n.toLocaleString()} &middot; Cancel: ${(d.cancel_rate*100).toFixed(0)}%`, ev);
+    });
+}
+
+// =====================================================================
+// 3. ORQUESTACI&Oacute;N
+// =====================================================================
+const RENDERERS = [renderScene0, renderScene1, renderScene2, renderScene3, renderScene4, renderScene5];
+const TITLES = [
+  ['Panorama por pa&iacute;s',                     'Cap&iacute;tulo I &middot; Volumen &times; cancelaci&oacute;n'],
+  ['Heatmap &middot; variaci&oacute;n &times; lead time', 'Cap&iacute;tulo II &middot; Densidad del riesgo'],
+  ['Pa&iacute;s a pa&iacute;s con signo y magnitud',     'Cap&iacute;tulo III &middot; Small multiples'],
+  ['Flujo: volatilidad &rarr; estado final',     'Cap&iacute;tulo IV &middot; Diagrama de Sankey'],
+  ['ADR &times; volatilidad &times; volumen',     'Cap&iacute;tulo V &middot; Bubble multivariada'],
+  ['Ingreso esperado vs realizado',              'Cap&iacute;tulo VI &middot; P&eacute;rdida monetizada']
+];
+
+let currentScene = -1;
+function activateScene(i) {
+  if (i === currentScene) return;
+  currentScene = i;
+  Object.values(scenes).forEach((s, k) => s.classed('is-active', k === i));
+  d3.select('#g-title').html(TITLES[i][0]);
+  d3.select('#g-meta').html(TITLES[i][1]);
+  if (!scenes[i].attr('data-rendered')) {
+    RENDERERS[i]();
+    scenes[i].attr('data-rendered', '1');
+  }
+}
+
+activateScene(0);
+
+// ScrollObserver
+const steps = document.querySelectorAll('.step');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+      steps.forEach(s => s.classList.remove('is-active'));
+      entry.target.classList.add('is-active');
+      const stepIndex = +entry.target.getAttribute('data-step');
+      activateScene(stepIndex);
+    }
+  });
+}, { threshold: [0.5, 0.6, 0.7] });
+
+steps.forEach(s => observer.observe(s));
+
+// Rail
+window.addEventListener('scroll', () => {
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = (window.scrollY / docH) * 100;
+  document.getElementById('rail').style.width = pct + '%';
+});
+
+// Resize
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    Object.values(scenes).forEach(s => s.attr('data-rendered', null));
+    const cur = currentScene; currentScene = -1; activateScene(cur);
+  }, 200);
+});
+
+// Log inicial al cargar
+console.log('Hotel Bookings Enriched · Filter euro_zone == Non-Euro');
+console.log(`Loaded ${BUNDLE.totals.total_bookings.toLocaleString()} bookings from ${BUNDLE.totals.total_countries} countries.`);
+console.log(`Overall cancel rate: ${(BUNDLE.totals.overall_cancel_rate*100).toFixed(2)}%`);
+console.log(`Revenue gap: $${(BUNDLE.totals.revenue_gap/1e6).toFixed(2)}M (${(BUNDLE.totals.gap_pct*100).toFixed(1)}%)`);
+</script>
+
 </body>
 </html>
